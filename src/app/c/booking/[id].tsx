@@ -121,7 +121,7 @@ export default function Booking() {
 
         {upcoming && dep > 0 && !b.deposit_paid && payment?.url ? (
           <View style={{ backgroundColor: c.goldBg, borderRadius: 16, padding: 14, gap: 10 }}>
-            <T size={14} color={c.goldInk}>Pay the {money(payment.amount_cents ?? dep, payment.currency ?? b.currency)} deposit to keep this time{payment.expires_at ? `. It is held until ${when(payment.expires_at, tz)}` : ""}. {payLine(b.currency)}</T>
+            <T size={14} color={c.goldInk}>Pay the {money(payment.amount_cents ?? dep, payment.currency ?? b.currency)} deposit to keep this time{payment.expires_at ? `. It is held until ${when(payment.expires_at, tz)}` : ""}. You will be charged {money(payment.amount_cents ?? dep, payment.currency ?? b.currency)} on {provider(payment.currency ?? b.currency)}, in {(payment.currency ?? b.currency) === "NGN" ? "naira" : "US dollars"}. {payLine(b.currency)}</T>
             {walletsFor(ft.wallets, provider(b.currency)) ? <WalletLine /> : null}
             <Btn small onPress={async () => { await openPay(payment.url); q.refresh(); }} style={{ alignSelf: "flex-start" }}>Pay deposit</Btn>
           </View>

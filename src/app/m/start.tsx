@@ -4,18 +4,19 @@ import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LocationFields, emptyLocation, locationFieldsBody, locationProblem, type LocationValue } from "@/components/ca-location-fields";
 import { Btn, Chip, Field, IconButton, Label, Note, Row, T } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 
 const CATEGORIES: [string, string][] = [["hair", "Hair"], ["braids", "Braids"], ["barber", "Barber"], ["nails", "Nails"], ["lashes", "Lashes & brows"], ["skin", "Skin"], ["makeup", "Makeup"], ["spa", "Spa & massage"]];
-const MARKETS: [string, string][] = [["US", "United States"], ["NG", "Nigeria"]];
 
 export default function Start() {
   const s = useSession();
   const insets = useSafeAreaInsets();
-  const [v, setV] = useState({ business: "", category: "", market: "US", address: "", city: "", region: "", name: "", email: "", phone: "", password: "", again: "" });
+  const [v, setV] = useState({ business: "", category: "", name: "", email: "", phone: "", password: "", again: "" });
+  const [loc, setLoc] = useState<LocationValue>(emptyLocation("US"));
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [made, setMade] = useState(false); // the account exists but the sign-in after it failed
   const set = (change: Partial<typeof v>) => setV((x) => ({ ...x, ...change }));
@@ -32,11 +33,12 @@ export default function Start() {
   const submit = async () => {
     setError("");
     if (!v.category) { setError("Choose what you do."); return; }
+    if (locationProblem(loc)) { setError(locationProblem(loc)); return; }
     if (v.password !== v.again) { setError("The two passwords do not match."); return; }
     setBusy(true);
     try {
       if (!made) {
-        await api("/m/signup", { body: { name: v.name.trim(), email: v.email.trim(), phone: v.phone.trim(), password: v.password, business: v.business.trim(), category: v.category, market: v.market, city: v.city.trim(), region: v.region.trim(), address: v.address.trim() } });
+        await api("/m/signup", { body: { name: v.name.trim(), email: v.email.trim(), phone: v.phone.trim(), password: v.password, business: v.business.trim(), category: v.category, ...locationFieldsBody(loc) } });
         setMade(true);
       }
       await signIn();
@@ -46,7 +48,7 @@ export default function Start() {
     }
   };
 
-  const ng = v.market === "NG";
+  const ng = loc.country === "NG";
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.cream }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -70,18 +72,7 @@ export default function Start() {
               {CATEGORIES.map(([k, name]) => <Chip key={k} on={v.category === k} onPress={() => set({ category: k })}>{name}</Chip>)}
             </Row>
           </View>
-          <View style={{ gap: 6 }}>
-            <Label>Country</Label>
-            <Row gap={8} wrap>
-              {MARKETS.map(([k, name]) => <Chip key={k} on={v.market === k} onPress={() => set({ market: k })}>{name}</Chip>)}
-            </Row>
-            <T size={13} muted>{ng ? "You are paid in naira, through Paystack." : "You are paid in US dollars, through Stripe."}</T>
-          </View>
-          <Field label="Street address" value={v.address} onChangeText={(address) => set({ address })} autoComplete="street-address" textContentType="streetAddressLine1" placeholder="Leave empty if you travel to clients" />
-          <Row gap={10} style={{ alignItems: "flex-start" }}>
-            <View style={{ flex: 3 }}><Field label="City" value={v.city} onChangeText={(city) => set({ city })} placeholder={ng ? "Lagos" : "Nashville"} textContentType="addressCity" /></View>
-            <View style={{ flex: 2 }}><Field label="State" value={v.region} onChangeText={(region) => set({ region })} placeholder={ng ? "Lagos" : "TN"} textContentType="addressState" autoCapitalize="characters" /></View>
-          </Row>
+          <LocationFields value={loc} onChange={(change) => { if (!made) { setLoc((x) => ({ ...x, ...change })); setError(""); } }} error={error && /address|street|city|state|region/i.test(error) ? error : undefined} />
 
           <View style={{ height: 1, backgroundColor: c.line2, marginVertical: 4 }} />
 

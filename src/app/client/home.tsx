@@ -1,14 +1,17 @@
-// The client's Home (design: Main). Everything on it is for the chosen city and comes from the API:
-// the client's own next booking and last visit, the saved businesses, and rows of businesses in the city.
+// The client's Home (design: Main). Everything on it is for the place the client is looking in and comes
+// from the API: the client's own next booking and last visit, the saved businesses, and rows of businesses
+// near the place, nearest first, filled out with the best of the country and of LogaLuxe when few are near.
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
-import { BusinessTile, profileHref } from "@/components/ca-business-card";
+import { BusinessTile, FirstHereTile, profileHref, tierLabel } from "@/components/ca-business-card";
+import { CountryBanner } from "@/components/ca-country-banner";
 import { HeroCard, ListYours, SoonestList, type HeroPhoto } from "@/components/ca-home";
+import { PlaceButton, PlacePanel } from "@/components/ca-place-panel";
 import { Avatar, Btn, Card, Chip, Empty, Failed, Icon, IconButton, Loading, Pill, Row, Screen, Serif, T } from "@/components/ui";
 import { api, qs, type Row as Data } from "@/lib/api";
-import { CITIES, useCity } from "@/lib/ca-city";
 import { bookAt, CATEGORIES, loadCovers, loadOpenings, type Biz, type Opening, type Openings } from "@/lib/ca-data";
+import { inCountry, shortName, usePlace, whereLine, type Geo, type Place } from "@/lib/ca-place";
 import { useSaved } from "@/lib/ca-saved";
 import { clock, dayShort, firstName, money, when } from "@/lib/format";
 import { useSession } from "@/lib/session";
@@ -16,55 +19,65 @@ import { c, f, pad } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";
 
 const HERE = "/client/home";
+const FILL = 10;
 
 function greeting() {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-/** A sideways row of businesses under a heading. */
-function Shelf({ title, onSeeAll, items, render }: { title: string; onSeeAll?: () => void; items: Biz[]; render: (b: Biz) => ReactNode }) {
+/** A sideways row of businesses under a heading. `after` is appended to the row (the "be the first" cards). */
+function Shelf({ title, sub, onSeeAll, items, render, after }: { title: string; sub?: string; onSeeAll?: () => void; items: Biz[]; render: (b: Biz) => ReactNode; after?: ReactNode }) {
   return (
     <View style={{ marginTop: 22 }}>
-      <Row between style={{ paddingHorizontal: pad, marginBottom: 12 }}>
+      <Row between style={{ paddingHorizontal: pad, marginBottom: sub ? 4 : 12 }}>
         <Serif size={22} style={{ flex: 1 }}>{title}</Serif>
         {onSeeAll ? <Pressable accessibilityRole="link" onPress={onSeeAll} hitSlop={14}><T size={13} weight="semi" color={c.wine}>See all</T></Pressable> : null}
       </Row>
+      {sub ? <T muted size={13} style={{ paddingHorizontal: pad, marginBottom: 12 }}>{sub}</T> : null}
       <FlatList horizontal data={items} keyExtractor={(b) => b.slug} renderItem={({ item }) => <>{render(item)}</>} showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: pad, gap: 12 }} />
+        contentContainerStyle={{ paddingHorizontal: pad, gap: 12 }} ListFooterComponent={after ? <View style={{ flexDirection: "row", gap: 12 }}>{after}</View> : null} />
     </View>
   );
 }
 
 export default function Home() {
   const s = useSession();
-  const city = useCity();
+  const w = usePlace();
   const saved = useSaved(HERE);
   const [picking, setPicking] = useState(false);
-  const currency = city.market === "NG" ? "NGN" : "USD";
+  const currency = w.currency;
+  const placeKey = JSON.stringify(w.query);
+  const here = w.place ? shortName(w.place) : "";
 
-  // The city's businesses: the best rated, and when each can next take a client.
+  // The businesses near the place: the best rated, filled to a full row, and when each can next take a client.
   const town = useLoad(async () => {
-    if (!city.ready) return null;
-    const [list, covers, heroes] = await Promise.all([api<{ businesses: Biz[]; total: number }>(`/businesses${qs({ market: city.market, limit: 30 })}`), loadCovers(),
-      api<{ media: HeroPhoto[] }>("/site/media?slot=hero").then((r) => r.media ?? []).catch(() => [] as HeroPhoto[])]);
-    const top = [...(list.businesses ?? [])].sort((a, b) => Number(b.rating) - Number(a.rating) || Number(b.review_count) - Number(a.review_count)).slice(0, 10);
+    if (!w.ready || !w.place) return null;
+    const [list, covers, heroes] = await Promise.all([
+      api<{ businesses: Biz[]; total: number; geo?: Geo & { fill?: { near: number; country: number; anywhere: number; short: number }; fill_notice?: string } }>(`/businesses${qs({ ...w.query, sort: "top", fill: FILL, limit: FILL })}`),
+      loadCovers(),
+      api<{ media: HeroPhoto[] }>("/site/media?slot=hero").then((r) => r.media ?? []).catch(() => [] as HeroPhoto[]),
+    ]);
+    const top = list.businesses ?? [];
     const openings = await loadOpenings(top.map((b) => b.slug));
+    // The nearest tier first, then by time: a free chair across an ocean is not sooner for anyone.
+    const rank = (b: Biz) => (b.tier === "anywhere" ? 2 : b.tier === "country" ? 1 : 0);
     const soonest = top.filter((b) => openings[b.slug]?.slots?.length)
-      .sort((a, b) => new Date(openings[a.slug].slots[0].starts_at).getTime() - new Date(openings[b.slug].slots[0].starts_at).getTime());
+      .sort((a, b) => rank(a) - rank(b) || new Date(openings[a.slug].slots[0].starts_at).getTime() - new Date(openings[b.slug].slots[0].starts_at).getTime());
     // One of the site's own photos for the banner, a different one each day.
     const hero = heroes.length ? heroes[new Date().getDate() % heroes.length] : undefined;
-    return { top, soonest, openings, covers, total: list.total, hero };
-  }, [city.market, city.ready]);
+    const geo = list.geo;
+    return { top, soonest, openings, covers, total: Number(list.total) || 0, hero, geo, fill: geo?.fill, fillNotice: geo?.fill_notice ?? "", near: top.filter((b) => !b.tier || b.tier === "near").length };
+  }, [placeKey, w.ready]);
 
-  // The signed-in client's own bookings: the next one, and the last visit in this city to book again.
+  // The signed-in client's own bookings: the next one, and the last visit in this country to book again.
   const mine = useLoad(async () => {
-    if (!s.clientToken || !city.ready) return null;
+    if (!s.clientToken || !w.ready) return null;
     const out = await s.capi<{ bookings: Data[] }>("/auth/me");
     const now = Date.now(), all = out.bookings ?? [];
     const upcoming = all.filter((b) => ["requested", "confirmed"].includes(b.status) && new Date(b.starts_at).getTime() > now)
       .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] ?? null;
-    // Newest first already. A visit that happened, at a business in the chosen city.
+    // Newest first already. A visit that happened, at a business priced in the money of the country being browsed.
     const last = all.find((b) => ["completed", "paid"].includes(b.status) && b.currency === currency && new Date(b.starts_at).getTime() < now) ?? null;
     let opening: Opening | null = null;
     if (last) {
@@ -75,7 +88,7 @@ export default function Home() {
       if (o?.slots?.length && names.includes(o.service)) opening = o;
     }
     return { upcoming, last, opening };
-  }, [s.clientToken, city.market, city.ready]);
+  }, [s.clientToken, currency, w.ready]);
 
   // Coming back to this tab: a booking may have been made or cancelled, a business saved.
   const first = useRef(true);
@@ -84,26 +97,28 @@ export default function Home() {
     void mine.reload();
     void saved.reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.clientToken, city.market]));
+  }, [s.clientToken, currency]));
 
   const toSearch = (category?: string) => router.navigate((category ? `/client/search?category=${category}&t=${Date.now()}` : "/client/search") as never);
   const savedHere = saved.list.filter((x) => x.currency === currency) as Biz[];
   const name = s.customer ? `${s.customer.first_name ?? ""} ${s.customer.last_name ?? ""}`.trim() : "";
   const up = mine.data?.upcoming, last = mine.data?.last, reopen = mine.data?.opening;
+  const t = town.data;
+  const nothingNear = !!t && t.near === 0;
+  const nearby: Place[] = (t?.geo?.nearest_places ?? []).filter((p) => p.slug !== w.place?.slug).slice(0, 4);
+  const tileTag = (b: Biz) => tierLabel(b.tier, w.scope);
+  const tile = (b: Biz) => <BusinessTile b={b} cover={t?.covers[b.slug]} src="app" tag={tileTag(b)} />;
+  const firstHere = t?.fill?.short ? Array.from({ length: Math.min(t.fill.short, 3) }, (_, i) => <FirstHereTile key={`first-${i}`} place={here} onPress={() => router.push("/m/start" as never)} />) : null;
 
   return (
     <Screen padded={false} onRefresh={() => { void town.refresh(); void mine.refresh(); void saved.reload(); }} refreshing={town.refreshing}>
       <View style={{ paddingHorizontal: pad }}>
-        <Row between>
-          <View style={{ flex: 1 }}>
+        <Row between style={{ alignItems: "flex-start" }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <T muted size={13} weight="medium">{greeting()}{s.customer?.first_name ? `, ${s.customer.first_name}` : ""}</T>
-            <Pressable accessibilityRole="button" accessibilityLabel={`City: ${city.label}. Change city.`} accessibilityState={{ expanded: picking }} onPress={() => setPicking(!picking)}
-              style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, alignSelf: "flex-start" }}>
-              <Text style={{ fontFamily: f.serifBold, fontSize: 26, color: c.ink }}>{city.label}</Text>
-              <Icon name="down" size={18} stroke={2.2} />
-            </Pressable>
+            {w.place ? <PlaceButton big label={w.place.label} open={picking} onPress={() => setPicking(true)} /> : <View style={{ minHeight: 44 }} />}
           </View>
-          <Row gap={10}>
+          <Row gap={10} style={{ paddingTop: 14 }}>
             <IconButton icon="bell" label="Your bookings" onPress={() => router.navigate("/client/bookings" as never)} />
             {s.customer ? (
               <Pressable accessibilityRole="button" accessibilityLabel="Your profile" onPress={() => router.navigate("/client/profile" as never)} hitSlop={2}>
@@ -116,20 +131,15 @@ export default function Home() {
             ) : null}
           </Row>
         </Row>
-
-        {picking ? (
-          <Card style={{ marginTop: 6, paddingHorizontal: 14 }}>
-            {CITIES.map((x, i) => (
-              <Pressable key={x.market} accessibilityRole="radio" accessibilityState={{ checked: x.market === city.market }} onPress={() => { city.setMarket(x.market); setPicking(false); }}
-                style={{ minHeight: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-                <T weight={x.market === city.market ? "semi" : "body"}>{x.label}</T>
-                {x.market === city.market ? <Icon name="check" size={18} /> : null}
-              </Pressable>
-            ))}
-          </Card>
+        {/* How we came by the place, said plainly. A guess is called a guess. */}
+        {w.place && (w.approximate || w.elsewhere || w.source === "device") ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={`${whereLine(w)}. Change place`} onPress={() => setPicking(true)} style={{ minHeight: 32, justifyContent: "center" }}>
+            <T muted size={13} numberOfLines={2}>{whereLine(w)}. <T size={13} weight="semi" color={c.wine}>Change</T></T>
+          </Pressable>
         ) : null}
+        <CountryBanner style={{ marginTop: 10 }} />
 
-        <Pressable accessibilityRole="button" accessibilityLabel={`Search ${city.city}`} onPress={() => toSearch()}
+        <Pressable accessibilityRole="button" accessibilityLabel={`Search ${here || "LogaLuxe"}`} onPress={() => toSearch()}
           style={({ pressed }) => ({ marginTop: 18, minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: c.line2, backgroundColor: c.white, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 10, opacity: pressed ? 0.85 : 1 })}>
           <Icon name="search" size={20} />
           <Text numberOfLines={1} style={{ flex: 1, fontFamily: f.body, fontSize: 15, color: c.muted2 }}>Knotless braids, skin fade, lash fill…</Text>
@@ -137,12 +147,14 @@ export default function Home() {
         </Pressable>
       </View>
 
+      <PlacePanel open={picking} onClose={() => setPicking(false)} />
+
       {saved.error ? <View style={{ paddingHorizontal: pad, marginTop: 14 }}><Failed error={saved.error} /></View> : null}
 
       {/* Someone with a visit to rebook sees that card here instead. */}
-      {!last && town.data && town.data.top.length > 0 ? (
+      {!last && t && t.total > 0 ? (
         <View style={{ paddingHorizontal: pad, marginTop: 16 }}>
-          <HeroCard photo={town.data.hero} city={city.city} count={Number(town.data.total) || town.data.top.length} onPress={() => toSearch()} />
+          <HeroCard photo={t.hero} city={here} count={t.total} onPress={() => toSearch()} />
         </View>
       ) : null}
 
@@ -202,23 +214,48 @@ export default function Home() {
         </View>
       ) : null}
 
-      {savedHere.length ? <Shelf title="Your saved" items={savedHere} render={(b) => <BusinessTile b={b} cover={town.data?.covers[b.slug]} src="app" />} /> : null}
+      {savedHere.length ? <Shelf title="Your saved" items={savedHere} render={(b) => <BusinessTile b={b} cover={t?.covers[b.slug]} src="app" />} /> : null}
 
-      {!town.data && (town.loading || !city.ready) ? <Loading label={`Loading ${city.city}`} /> : null}
-      {town.error && !town.data ? <View style={{ paddingHorizontal: pad, marginTop: 22 }}><Failed error={town.error} onRetry={town.reload} /></View> : null}
-      {town.data && town.data.top.length === 0 ? (
+      {!w.ready || (!t && town.loading) ? <Loading label={here ? `Loading ${here}` : "Finding where you are"} /> : null}
+      {w.ready && !w.place ? (
         <View style={{ paddingHorizontal: pad, marginTop: 22 }}>
-          <Empty title={`No one is taking bookings in ${city.city} yet`}>Businesses appear here as soon as they open their calendar on LogaLuxe. You can look in the other city from the top of this screen.</Empty>
+          {w.error ? <Failed error={w.error} onRetry={() => void w.reload()} /> : <Empty title="Choose where to look" action={<Btn kind="out" small onPress={() => setPicking(true)}>Choose a place</Btn>}>Pick a city, a state or a country and the professionals there appear here.</Empty>}
         </View>
       ) : null}
-      {town.data && town.data.top.length > 0 ? (
+      {town.error && !t ? <View style={{ paddingHorizontal: pad, marginTop: 22 }}><Failed error={town.error} onRetry={town.reload} /></View> : null}
+
+      {/* Nothing near the place: the API's own sentence, and the nearest places that do have professionals. */}
+      {t && nothingNear ? (
+        <View style={{ paddingHorizontal: pad, marginTop: 22 }}>
+          <Empty title={`No one is taking bookings ${w.place?.kind === "country" ? `in ${inCountry(w.scope)}` : `near ${here}`} yet`}
+            action={firstHere ? <Btn kind="out" small onPress={() => router.push("/m/start" as never)}>List your business</Btn> : undefined}>
+            {t.geo?.notice || "Businesses appear here as soon as they open their calendar on LogaLuxe."}
+          </Empty>
+          {nearby.length ? (
+            <View style={{ marginTop: 12 }}>
+              <T muted size={13} style={{ marginBottom: 8 }}>Nearest places with professionals</T>
+              <Row gap={8} wrap>
+                {nearby.map((p) => <Chip key={p.slug} icon="pin" onPress={() => w.setPlace(p)}>{p.label}{p.distance_text ? ` · ${p.distance_text}` : ""}</Chip>)}
+              </Row>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {t && t.top.length === 0 && !t.fill?.short ? (
+        <View style={{ paddingHorizontal: pad, marginTop: 22 }}>
+          <Empty title="No one is taking bookings on LogaLuxe yet">Businesses appear here as soon as they open their calendar on LogaLuxe.</Empty>
+        </View>
+      ) : null}
+
+      {t && (t.top.length > 0 || t.fill?.short) ? (
         <>
-          <Shelf title={`Top rated in ${city.city}`} onSeeAll={() => toSearch()} items={town.data.top} render={(b) => <BusinessTile b={b} cover={town.data!.covers[b.slug]} src="app" />} />
-          {town.data.soonest.length ? (
+          <Shelf title={w.place?.kind === "country" ? `Top rated in ${inCountry(w.scope)}` : `Top rated near ${here}`} sub={t.fillNotice || (t.geo?.widened ? t.geo.notice : "")} onSeeAll={() => toSearch()} items={t.top} render={tile} after={firstHere} />
+          {t.soonest.length ? (
             <View style={{ paddingHorizontal: pad, marginTop: 26 }}>
               <Serif size={22}>Free soonest</Serif>
-              <T muted size={13} style={{ marginTop: 2, marginBottom: 12 }}>Tap a time to book it.</T>
-              <SoonestList items={town.data.soonest.slice(0, 5)} openings={town.data.openings} />
+              <T muted size={13} style={{ marginTop: 2, marginBottom: 12 }}>Tap a time to book it.{w.point ? ` Distances are from ${w.source === "device" ? "you" : `the middle of ${here}`}.` : ""}</T>
+              <SoonestList items={t.soonest.slice(0, 5)} openings={t.openings} tag={tileTag} />
             </View>
           ) : null}
           <View style={{ paddingHorizontal: pad, marginTop: 26, marginBottom: 8 }}>

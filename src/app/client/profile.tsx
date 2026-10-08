@@ -7,6 +7,7 @@ import { Linking, Pressable, Text, View } from "react-native";
 import { Grp, Item, Rows, SignInGate, TabTitle } from "@/components/cc-ui";
 import { Avatar, Btn, Failed, IconButton, Loading, Note, Row, Screen, T } from "@/components/ui";
 import { WEB_URL, type Row as Data } from "@/lib/api";
+import { inCountry, moneyName, providerName, shopHref, usePlace } from "@/lib/ca-place";
 import { useRefocus } from "@/lib/cc-data";
 import { money, plural } from "@/lib/format";
 import { cardName, useCards } from "@/lib/mp-cards";
@@ -24,6 +25,7 @@ export default function Profile() {
   const [sent, setSent] = useState<{ kind: "ok" | "bad"; text: string } | null>(null);
   const [sending, setSending] = useState(false), [leaving, setLeaving] = useState(false);
   const kept = useCards(); // shown only while saved cards are switched on
+  const w = usePlace();
 
   // Each part is asked on its own, so one that fails does not hide the rest.
   const q = useLoad(async () => {
@@ -114,6 +116,8 @@ export default function Profile() {
       <Rows>
         <Item icon="wallet" title="Wallet" sub={wallet ? (held.length ? `Packages, memberships and points at ${names(held.map((w) => String(w.business)), "")}` : "Packages, memberships, points and store credit") : "Could not be loaded just now"} onPress={() => router.push("/c/account/wallet" as never)} />
         {kept.on ? <Item icon="card" title="Saved cards" sub={kept.cards.length ? names(kept.cards.map(cardName), "") : "None yet. Keep a card the next time you pay"} onPress={() => router.push("/c/account/wallet" as never)} /> : null}
+        <Item icon="shop" title="The shop" sub={`Products from the professionals you book, priced in ${moneyName(w.scope)}. Opens on the website`} onPress={() => web(shopHref(w.scope))} />
+        <Item icon="card" title="Gift cards" sub={`For someone in ${inCountry(w.scope)}, in ${moneyName(w.scope)}, paid on ${providerName(w.scope)}. Opens on the website`} onPress={() => web(`/gift-cards?country=${w.scope.toLowerCase()}`)} />
         <Item icon="card" title="Shop orders" sub="Opens your orders on the LogaLuxe website" onPress={() => web("/account?tab=orders")} />
       </Rows>
 
@@ -121,6 +125,7 @@ export default function Profile() {
       <Rows>
         {inviting ? <Item title="Invite a friend" sub={`You each get ${money(referral!.credit_cents, "USD")} of credit after their first visit or order`} onPress={() => router.push("/c/account/wallet" as never)} /> : null}
         <Item title="Details and password" sub={user.phone && user.phone_verified === false && ft.sms_login ? "Your mobile number is not confirmed yet" : "Your name, mobile number and password"} onPress={() => router.push("/c/account/details" as never)} />
+        <Item icon="pin" title={w.source === "picked" || w.source === "device" ? "Forget my location" : "Where you are looking"} sub={w.place ? (w.source === "device" ? `Near you, around ${w.place.label}. Forget it and go back to our first guess` : w.source === "picked" ? `You chose ${w.place.label}. Forget it and go back to our first guess` : `${w.place.label}, our guess. Change it from the top of Home`) : "Not set yet"} onPress={() => { if (w.source === "picked" || w.source === "device") { void w.forget(); setSent({ kind: "ok", text: "Your location is forgotten. Home shows our first guess again." }); } else router.navigate("/client/home" as never); }} />
         <Item title="Help" sub="Answers, and how to write to us" onPress={() => web("/help")} />
         <Item title="Terms" sub="Opens on the LogaLuxe website" onPress={() => web("/legal/terms")} />
         <Item title="Privacy" sub="How your data is used, and how to ask for it" onPress={() => web("/legal/privacy")} />

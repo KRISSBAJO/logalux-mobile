@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Acts, ActBtn, BackTitle, Seg } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Empty, Failed, Loading, Note, Row, Stars } from "@/components/ui";
 import { api, media, WEB_URL, type Row as Data } from "@/lib/api";
+import { CountryBanner } from "@/components/ca-country-banner";
+import { shopHref, usePlace } from "@/lib/ca-place";
 import { useRefocus } from "@/lib/cc-data";
 import { money } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
@@ -18,6 +20,7 @@ type Tab = "businesses" | "products";
 export default function Saved() {
   const p = useLocalSearchParams<{ tab?: string }>();
   const s = useSession();
+  const w = usePlace();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>(p.tab === "products" ? "products" : "businesses");
   const [busy, setBusy] = useState(""), [said, setSaid] = useState<{ kind: "ok" | "bad"; text: string } | null>(null);
@@ -64,6 +67,7 @@ export default function Saved() {
       ) : (
         <>
           <View style={{ marginTop: 18 }}><Seg<Tab> options={[["businesses", "Businesses"], ["products", "Products"]]} value={tab} onChange={(t) => { setTab(t); setSaid(null); }} /></View>
+          {tab === "products" ? <CountryBanner style={{ marginTop: 12 }} /> : null}
           {said ? <View style={{ marginTop: 12 }}><Note kind={said.kind}>{said.text}</Note></View> : null}
           {q.error && !q.data ? <View style={{ marginTop: 14 }}><Failed error={q.error} onRetry={q.reload} /></View> : null}
           {q.loading && !q.data ? <Loading label="Loading your saved list" /> : null}
@@ -109,7 +113,7 @@ export default function Saved() {
         ListEmptyComponent={s.clientToken && q.data && list ? (
           tab === "businesses"
             ? <Empty title="No businesses saved yet" action={<Btn small onPress={() => router.push("/client/search" as never)}>Find a professional</Btn>}>Use Save on a business page to keep it here.</Empty>
-            : <Empty title="No products saved yet" action={<Btn small kind="out" onPress={() => void Linking.openURL(`${WEB_URL}/shop`)}>Visit the shop on the website</Btn>}>Use the heart on a product in the shop to keep it here.</Empty>
+            : <Empty title="No products saved yet" action={<Btn small kind="out" onPress={() => void Linking.openURL(`${WEB_URL}${shopHref(w.scope)}`)}>Visit the shop on the website</Btn>}>Use the heart on a product in the shop to keep it here.</Empty>
         ) : null}
       />
     </View>
@@ -119,7 +123,7 @@ export default function Saved() {
 function Product({ x, busy, onRemove }: { x: Data; busy: boolean; onRemove: () => void }) {
   const sizes = ((x.sizes ?? []) as Data[]).map((z) => Number(z.price_cents)).filter((n) => Number.isFinite(n) && n > 0);
   const lowest = Math.min(Number(x.price_cents), ...sizes);
-  const view = () => void Linking.openURL(`${WEB_URL}/shop/${encodeURIComponent(x.slug)}`);
+  const view = () => void Linking.openURL(`${WEB_URL}/shop/${encodeURIComponent(x.slug)}?country=${String(x.currency ?? "").toUpperCase() === "NGN" ? "ng" : "us"}`);
   const uri = media(x.photo_id);
   return (
     <Card style={{ padding: 14 }}>

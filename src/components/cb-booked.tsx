@@ -86,7 +86,7 @@ export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: str
   const footer = cancelled
     ? <Cta onPress={() => router.replace(bookHref(biz.slug, { services: ids, src }) as never)}>Book again</Cta>
     : unpaid
-      ? <View style={{ gap: 8 }}><Cta busy={paying} onPress={() => pay(bk.payment!.url)}>Pay {money(due, bk.payment?.currency || cur)} deposit</Cta><T muted size={11} center>You pay on {provider}&apos;s secure page. LogaLuxe never sees your card.</T>{walletsFor(ft.wallets, provider) ? <WalletLine align="center" /> : null}</View>
+      ? <View style={{ gap: 8 }}><Cta busy={paying} onPress={() => pay(bk.payment!.url)}>Pay {money(due, bk.payment?.currency || cur)} deposit</Cta><T muted size={12} center>You will be charged {money(due, bk.payment?.currency || cur)} on {provider}, in {(bk.payment?.currency || cur) === "NGN" ? "naira" : "US dollars"}.</T><T muted size={11} center>You pay on {provider}&apos;s secure page. LogaLuxe never sees your card.</T>{walletsFor(ft.wallets, provider) ? <WalletLine align="center" /> : null}</View>
       : <Cta onPress={() => router.replace("/client/bookings")}>See my bookings</Cta>;
 
   return (

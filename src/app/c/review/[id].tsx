@@ -140,7 +140,7 @@ export default function Review() {
         const t = await s.capi<Data>(`/auth/bookings/${id}/tip`, { method: "POST", body: { amount_cents: tip, ...pay.fields() } });
         const amount = money(Number(t.amount_cents) || tip, t.currency || currency);
         if (t.paid === true) out.push({ kind: "ok", text: `Your ${amount} tip to ${b.business} was paid${pay.card ? ` with ${cardName(pay.card)}` : ""}.` });
-        else if (t.payment?.url) { payUrl = t.payment.url; out.push({ kind: "gold", text: `Finish your ${amount} tip on the payment page. It is added once it is paid.` }); }
+        else if (t.payment?.url) { payUrl = t.payment.url; out.push({ kind: "gold", text: `Finish your ${amount} tip on the payment page. You will be charged ${amount} on ${provider(t.currency || currency)}, in ${(t.currency || currency) === "NGN" ? "naira" : "US dollars"}. It is added once it is paid.` }); }
         else out.push({ kind: "ok", text: `Your ${amount} tip is on its way to ${b.business}.` });
       } catch (e) {
         out.push({ kind: "bad", text: `The tip was not added. ${(e as Error).message}` });

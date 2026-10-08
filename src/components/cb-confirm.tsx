@@ -162,6 +162,7 @@ export function CbConfirm(p: Props) {
   const footer = (
     <View style={{ gap: 8 }}>
       <Cta busy={busy} onPress={confirm} lead={deposit > 0 && online ? <LockIcon /> : undefined}>{cta}</Cta>
+      {deposit > 0 && online ? <T muted size={12} center>You will be charged {money(deposit, cur)} on {provider}, in {cur === "NGN" ? "naira" : "US dollars"}.</T> : null}
       <T muted size={11} center>By confirming you agree to {biz.name}&apos;s cancellation policy and LogaLuxe&apos;s terms.</T>
     </View>
   );

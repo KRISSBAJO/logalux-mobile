@@ -54,7 +54,8 @@ Business side (`/business/*` tabs, other screens under `/m/*`). Every tool a bus
 
 ## Things to know
 
-- Sign-in is by email and password. The designs show a texted code; texts are switched off in this product for now.
+- Sign-in is by email and password, and by a texted code once an admin switches that on in the console (Features). Texts, WhatsApp, the Apple Pay and Google Pay note and saved cards appear in the app only while switched on; the app reads `GET /v1/features` on every screen focus.
+- A new person sees a welcome screen once, then the client home; a business person signs in from it.
 - Payment happens on Stripe's or Paystack's own page, opened in the phone's browser. The app never sees a card.
 - Bank details are entered on the provider page (Stripe), or for Nigeria exactly as the web does it. Only help pages open the website.
 - Spreadsheet exports are shared as text on a phone; sharing a real file needs `expo-sharing` and `expo-file-system`.

@@ -17,6 +17,12 @@ export type Biz = {
   id: string; slug: string; name: string; tagline?: string; category?: string; market?: string; currency: string; timezone: string;
   rating: number; review_count: number; verification_status?: string; tone?: string | null; area?: string | null; city?: string | null;
   hours?: Hours | null; from_cents?: number | null; promoted?: boolean; highlights?: string[] | null;
+  /** Where it is and how far, when the list was asked from a point: "2.3 mi" in the US, kilometres elsewhere. */
+  region?: string | null; country?: string | null; distance_km?: number | null; distance?: number | null; distance_text?: string | null; distance_unit?: "mi" | "km" | null;
+  /** Goes to clients rather than having a shop front; `pin` is "area" then, "exact" for a shop front, "none" with no position. */
+  travels?: boolean; travel_radius_km?: number | null; pin?: "exact" | "area" | "none";
+  /** With `fill=N`: "near" the place, else the best "country"-wide, else the best "anywhere" on LogaLuxe. */
+  tier?: "near" | "country" | "anywhere";
 };
 export type Slot = { time: string; starts_at: string; staff_id: string; staff: string; price_cents: number };
 export type Opening = { service_id: string; service: string; slots: Slot[] };

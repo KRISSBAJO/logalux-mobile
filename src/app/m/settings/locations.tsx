@@ -1,19 +1,21 @@
 // Locations: every place the business trades from. Add one, change its address and arrival notes,
 // set its opening hours, choose the main one, delete one that has never been booked.
-// The map position is found from the address by the API each time the address is saved, as on the web.
+// The map position is found from the address by the API each time the address is saved, as on the web, unless a pin was set by hand.
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
+import { LocationFields, emptyLocation, locationFieldsBody, locationProblem, locationValueOf, type LocationValue } from "@/components/ca-location-fields";
 import { Sheet, SmallBtn, Stepper, Sw, Tag } from "@/components/mc-kit";
 import { Gate, Page, backTo } from "@/components/mi-kit";
 import { Btn, Card, Empty, Field, Icon, Note, Row, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
+import { distanceLabel, pinWords } from "@/lib/ca-place";
 import { DAYS, DAY_LONG, DENIED, HALF_HOURS, ask, clock12, orDenied, signedIn, type Day, type Hours } from "@/lib/mc-util";
 import { hoursLine, isOpen, locationBody, type Flash } from "@/lib/mi-util";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";
 
-type Form = { id: string; name: string; address: string; city: string; region: string; arrival_notes: string };
+type Form = { id: string; name: string; arrival_notes: string; loc: LocationValue };
 type Draft = Record<Day, [string, string] | null>;
 const back = backTo("/m/settings");
 const shift = (hhmm: string, up: boolean) => {
@@ -34,16 +36,19 @@ export default function Locations() {
   if (!data || data === DENIED) return <Gate title="Locations" onBack={back} denied={data === DENIED} what="Locations and their opening hours are set by a manager or the owner." error={error} onRetry={reload} />;
 
   const locations = (data.locations ?? []) as Data[];
+  const country = String(data.business?.market ?? locations[0]?.country ?? "US");
   const set = (change: Partial<Form>) => { setForm((x) => (x ? { ...x, ...change } : x)); if (change.name !== undefined) setFormError(""); };
+  const setLoc = (change: Partial<LocationValue>) => { setForm((x) => (x ? { ...x, loc: { ...x.loc, ...change } } : x)); setFormError(""); };
 
   const open = (l?: Data) => {
     setFormError("");
-    setForm(l ? { id: String(l.id), name: String(l.name ?? ""), address: String(l.address ?? ""), city: String(l.city ?? ""), region: String(l.region ?? ""), arrival_notes: String(l.arrival_notes ?? "") } : { id: "", name: "", address: "", city: "", region: "", arrival_notes: "" });
+    setForm(l ? { id: String(l.id), name: String(l.name ?? ""), arrival_notes: String(l.arrival_notes ?? ""), loc: locationValueOf(l, country) } : { id: "", name: "", arrival_notes: "", loc: emptyLocation(country) });
   };
 
   const save = async () => {
     if (!form) return;
-    const fields = { name: form.name.trim(), address: form.address.trim(), city: form.city.trim(), region: form.region.trim(), arrival_notes: form.arrival_notes.trim() };
+    if (locationProblem(form.loc)) { setFormError(locationProblem(form.loc)); return; }
+    const fields = { name: form.name.trim(), arrival_notes: form.arrival_notes.trim(), ...locationFieldsBody(form.loc) };
     const old = locations.find((l) => l.id === form.id);
     setBusy("form"); setFormError(""); setNote(null);
     try {
@@ -51,9 +56,10 @@ export default function Locations() {
       const out = old ? await s.mapi<Data>(`/locations/${old.id}`, { method: "PUT", body: locationBody(old, fields) }) : await s.mapi<Data>("/locations", { body: fields });
       setForm(null);
       await refresh();
-      setNote(!old ? { kind: "ok", text: "Location added. It opens Monday to Saturday to start with: set its real hours next." }
-        : out.position === "not found" ? { kind: "bad", text: "Saved. We could not place that address on the map, so check the street and city." }
-        : { kind: "ok", text: out.position === "found" ? "Location saved, and placed on the map." : "Location saved." });
+      const pin = pinWords(String(out.position ?? ""));
+      setNote(!old ? { kind: out.position === "not found" ? "bad" : "ok", text: `Location added. ${pin} It opens Monday to Saturday to start with: set its real hours next.`.replace(/  /g, " ") }
+        : out.position === "not found" ? { kind: "bad", text: `Saved. ${pin}` }
+        : { kind: "ok", text: `Location saved. ${pin}`.trim() });
     } catch (e) {
       setFormError((e as Error).message);
     }
@@ -130,6 +136,7 @@ export default function Locations() {
               <Row gap={8} wrap>
                 <Tag kind={onMap(l) ? "ok" : "gold"}>{onMap(l) ? "On the map" : "Not on the map yet"}</Tag>
                 <Tag>{String(l.timezone ?? "").replace(/_/g, " ")}</Tag>
+                {l.travels ? <Tag kind="gold">Comes to clients{Number(l.travel_radius_km) > 0 ? ` · within ${distanceLabel(Number(l.travel_radius_km), String(l.country ?? country) === "US" ? "mi" : "km")}` : ""}</Tag> : null}
               </Row>
               {!onMap(l) ? <T size={12} muted>Save a street address and city, and LogaLuxe places it on the map for you.</T> : null}
               <Row gap={8} wrap>
@@ -154,13 +161,9 @@ export default function Locations() {
         footer={<Btn busy={busy === "form"} onPress={save}>{form?.id ? "Save location" : "Add location"}</Btn>}>
         {form ? (
           <>
-            {formError && !/needs a name/i.test(formError) ? <Note kind="bad">{formError}</Note> : null}
+            {formError && !/needs a name/i.test(formError) && !/address|street|city|state|region/i.test(formError) ? <Note kind="bad">{formError}</Note> : null}
             <Field label="Name · how you tell your locations apart" value={form.name} onChangeText={(name) => set({ name })} maxLength={80} placeholder="Lekki Phase 1" error={/needs a name/i.test(formError) ? formError : undefined} />
-            <Field label="Street address" value={form.address} onChangeText={(address) => set({ address })} maxLength={160} autoComplete="street-address" textContentType="streetAddressLine1" />
-            <Row gap={10} style={{ alignItems: "flex-start" }}>
-              <View style={{ flex: 1.4 }}><Field label="City" value={form.city} onChangeText={(city) => set({ city })} maxLength={80} textContentType="addressCity" /></View>
-              <View style={{ flex: 1 }}><Field label="State or region" value={form.region} onChangeText={(region) => set({ region })} maxLength={80} textContentType="addressState" /></View>
-            </Row>
+            <LocationFields value={form.loc} onChange={setLoc} fixedCountry error={formError && /address|street|city|state|region/i.test(formError) ? formError : undefined} />
             <Field label="Parking and arrival notes" value={form.arrival_notes} onChangeText={(arrival_notes) => set({ arrival_notes })} multiline maxLength={400} placeholder="Free parking behind the building, ring bell 2" hint="Shown to clients with your address." />
           </>
         ) : null}

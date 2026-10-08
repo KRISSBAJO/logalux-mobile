@@ -389,7 +389,7 @@ export function TipSheet({ open, onClose, b, onTipped }: Common & { onTipped: (m
       const out = await s.capi<Data>(`/auth/bookings/${b.id}/tip`, { method: "POST", body: { amount_cents: cents, ...pay.fields() } });
       const amount = money(Number(out.amount_cents) || cents, out.currency || currency);
       if (out.paid === true) onTipped(`Thank you. Your ${amount} tip to ${b.business} was paid${pay.card ? ` with ${cardName(pay.card)}` : ""}.`);
-      else if (out.payment?.url) onTipped(`Finish your ${amount} tip on the payment page. It is added here once it is paid.`, out.payment.url);
+      else if (out.payment?.url) onTipped(`Finish your ${amount} tip on the payment page. You will be charged ${amount} on ${provider(out.currency || currency)}, in ${(out.currency || currency) === "NGN" ? "naira" : "US dollars"}. It is added here once it is paid.`, out.payment.url);
       else onTipped(`Thank you. Your ${amount} tip is on its way to ${b.business}.`);
     } catch (e) {
       setError((e as Error).message);

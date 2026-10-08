@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar, Btn, Chip, Empty, Failed, Icon, Label, Loading, Note, Pill, Row, Screen, Serif, T, type IconName } from "@/components/ui";
 import { api, ApiError, media, WEB_URL, type Row as Data } from "@/lib/api";
 import { categoryLabel, cleanSrc, hourRows, lateRule, openBadge, replyLine } from "@/lib/ca-data";
+import { distanceLabel, kmBetween, shortName, usePlace } from "@/lib/ca-place";
 import { dayShort, duration, firstName, money, plural, ymd } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { c, f, pad, radius } from "@/lib/theme";
@@ -61,6 +62,7 @@ export default function Profile() {
   const slug = String(p.slug ?? "");
   const src = cleanSrc(p.src);
   const s = useSession();
+  const w = usePlace();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const here = `/c/b/${slug}${src ? `?src=${src}` : ""}`;
@@ -196,6 +198,10 @@ export default function Profile() {
   const handle = (v?: string) => (v ?? "").replace(/^@/, "").trim();
   const site = b.website ? (/^https?:\/\//.test(b.website) ? b.website : `https://${b.website}`) : "";
   const hasPin = showAddress && typeof loc?.lat === "number" && typeof loc?.lng === "number";
+  // How far it is from where the client is looking: from their device, or the middle of their place. Miles for a US business, kilometres for a Nigerian one.
+  const howFar = w.point && typeof loc?.lat === "number" && typeof loc?.lng === "number"
+    ? `${distanceLabel(kmBetween(w.point, { lat: loc.lat, lng: loc.lng }), (loc.country ?? b.market) === "US" ? "mi" : "km")} ${w.source === "device" ? "from you" : `from the middle of ${shortName(w.place!)}`}` : "";
+  const travels = !!loc?.travels;
   const address = showAddress ? [loc?.address, [loc?.city, loc?.region === loc?.city ? "" : loc?.region].filter(Boolean).join(" ")].filter(Boolean).join(", ") || loc?.name || "" : [loc?.city, loc?.region].filter(Boolean).join(" ");
   const openMaps = () => {
     const at = `${loc!.lat},${loc!.lng}`;
@@ -424,6 +430,7 @@ export default function Profile() {
               <View>
                 <Serif size={22} style={{ marginBottom: 8 }}>Where</Serif>
                 <T size={14} weight="semi">{address}</T>
+                {howFar ? <T muted size={13}>{howFar}{travels ? " · comes to you" : ""}</T> : travels ? <T muted size={13}>Comes to you{Number(loc?.travel_radius_km) > 0 ? ` within ${distanceLabel(Number(loc!.travel_radius_km), (loc!.country ?? b.market) === "US" ? "mi" : "km")}` : ""}.</T> : null}
                 {!showAddress ? <T muted size={13}>The exact address is sent when you book.</T> : null}
                 {showAddress && loc?.arrival_notes ? <T muted size={13} style={{ marginTop: 2 }}>{loc.arrival_notes}</T> : null}
                 {hasPin ? (

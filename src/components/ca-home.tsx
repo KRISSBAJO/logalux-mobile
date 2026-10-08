@@ -52,17 +52,19 @@ export function HeroCard({ photo, city, count, onPress }: { photo?: HeroPhoto; c
 }
 
 /** Who can take a client soonest, one business to a row, each free time a button that books it. */
-export function SoonestList({ items, openings }: { items: Biz[]; openings: Record<string, Opening> }) {
+export function SoonestList({ items, openings, tag }: { items: Biz[]; openings: Record<string, Opening>; /** A small line over a business from a further tier of a filled row. */ tag?: (b: Biz) => string }) {
   return (
     <View style={styles.list}>
       {items.map((b, i) => {
         const o = openings[b.slug];
         const rated = Number(b.review_count) > 0;
+        const over = tag?.(b) ?? "";
         return (
           <View key={b.slug} style={{ paddingVertical: 14, borderTopWidth: i ? 1 : 0, borderTopColor: c.line, gap: 10 }}>
             <Pressable accessibilityRole="button" accessibilityLabel={`Open ${b.name}`} onPress={() => router.push(profileHref(b.slug, "app") as never)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, opacity: pressed ? 0.8 : 1 })}>
               <Avatar name={b.name} tone={b.tone || c.wine} size={44} />
               <View style={{ flex: 1 }}>
+                {over ? <Text numberOfLines={1} style={{ fontFamily: f.semi, fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase", color: c.goldInk, marginBottom: 2 }}>{over}</Text> : null}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                   <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: f.bold, fontSize: 15, color: c.ink }}>{b.name}</Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
@@ -70,7 +72,7 @@ export function SoonestList({ items, openings }: { items: Biz[]; openings: Recor
                     <Text style={{ fontFamily: f.semi, fontSize: 12, color: c.ink }}>{rated ? Number(b.rating).toFixed(1) : "New"}</Text>
                   </View>
                 </View>
-                <Text numberOfLines={1} style={{ fontFamily: f.body, fontSize: 12.5, color: c.muted, marginTop: 2 }}>{[o.service, b.area || categoryLabel(b.category)].filter(Boolean).join(" · ")}</Text>
+                <Text numberOfLines={1} style={{ fontFamily: f.body, fontSize: 12.5, color: c.muted, marginTop: 2 }}>{[o.service, b.distance_text || "", b.area || categoryLabel(b.category)].filter(Boolean).join(" · ")}</Text>
               </View>
               <Icon name="next" size={16} color={c.muted2} />
             </Pressable>

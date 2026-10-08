@@ -6,11 +6,15 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Icon, Row, T } from "@/components/ui";
 import { media } from "@/lib/api";
 import { bookAt, categoryLabel, slotLabel, type Biz, type Opening } from "@/lib/ca-data";
+import { inCountry } from "@/lib/ca-place";
 import { money } from "@/lib/format";
 import { c, f, radius } from "@/lib/theme";
 
 /** Where a business's own page lives, carrying how the visitor found it. */
 export const profileHref = (slug: string, src = "") => `/c/b/${slug}${src ? `?src=${src}` : ""}`;
+
+/** The small line over a card from a further tier of a filled row: "Elsewhere in the United States", "Elsewhere on LogaLuxe". "" for one near the place. */
+export const tierLabel = (tier: string | undefined, scope: string) => (tier === "country" ? `Elsewhere in ${inCountry(scope)}` : tier === "anywhere" ? "Elsewhere on LogaLuxe" : "");
 
 const ratingText = (b: Pick<Biz, "rating" | "review_count">) => (Number(b.review_count) > 0 ? Number(b.rating).toFixed(1) : "New");
 
@@ -55,7 +59,8 @@ type CardProps = {
 
 export function BusinessCard({ b, cover, opening, saved, onSave, src = "" }: CardProps) {
   const reviews = Number(b.review_count) || 0;
-  const facts = [b.area || b.city, b.verification_status === "verified" ? "Verified" : ""].filter(Boolean).join(" · ");
+  // How far it is comes first when the list was asked from a point. A business that travels to clients is marked so.
+  const facts = [b.distance_text || "", b.travels ? "Comes to you" : "", b.area || b.city, b.verification_status === "verified" ? "Verified" : ""].filter(Boolean).join(" · ");
   const slots = (opening?.slots ?? []).slice(0, 3);
   return (
     <View style={styles.card}>
@@ -103,12 +108,13 @@ export function BusinessCard({ b, cover, opening, saved, onSave, src = "" }: Car
   );
 }
 
-export function BusinessTile({ b, cover, src = "", note }: { b: Biz; cover?: string; src?: string; /** A line in place of the usual facts, for example its next free time. */ note?: string }) {
-  const facts = note ?? [categoryLabel(b.category), b.area || b.city, b.from_cents != null ? `from ${money(b.from_cents, b.currency)}` : ""].filter(Boolean).join(" · ");
+export function BusinessTile({ b, cover, src = "", note, tag }: { b: Biz; cover?: string; src?: string; /** A line in place of the usual facts, for example its next free time. */ note?: string; /** A small line over the name, for a card from a further tier of a filled row. */ tag?: string }) {
+  const facts = note ?? [b.distance_text || "", categoryLabel(b.category), b.area || b.city, b.from_cents != null ? `from ${money(b.from_cents, b.currency)}` : ""].filter(Boolean).join(" · ");
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${b.name}${facts ? `, ${facts}` : ""}`} onPress={() => router.push(profileHref(b.slug, src) as never)} style={({ pressed }) => [styles.tile, pressed && { opacity: 0.9 }]}>
       <Cover b={b} cover={cover} height={120} />
       <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14 }}>
+        {tag ? <Text numberOfLines={1} style={{ fontFamily: f.semi, fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase", color: c.goldInk, marginBottom: 4 }}>{tag}</Text> : null}
         <Row between gap={8}>
           <Text numberOfLines={1} style={{ flex: 1, fontFamily: f.bold, fontSize: 15, color: c.ink }}>{b.name}</Text>
           <Row gap={4}>
@@ -122,9 +128,25 @@ export function BusinessTile({ b, cover, src = "", note }: { b: Biz; cover?: str
   );
 }
 
+/** A tile in the row where a professional is missing: there are fewer on LogaLuxe than the row holds, so the space invites one. */
+export function FirstHereTile({ place, onPress }: { place: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`Be the first professional in ${place}. List your business`} onPress={onPress} style={({ pressed }) => [styles.tile, styles.first, pressed && { opacity: 0.9 }]}>
+      <View style={{ height: 120, alignItems: "center", justifyContent: "center", backgroundColor: c.cream2 }}>
+        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: c.white, alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color={c.goldInk} /></View>
+      </View>
+      <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14 }}>
+        <Text numberOfLines={2} style={{ fontFamily: f.bold, fontSize: 15, lineHeight: 20, color: c.ink }}>Be the first professional in {place}</Text>
+        <T size={12} weight="semi" color={c.wine} style={{ marginTop: 4 }}>List your business</T>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   card: { backgroundColor: c.white, borderWidth: 1, borderColor: c.line, borderRadius: radius.card, overflow: "hidden" },
   tile: { width: 220, backgroundColor: c.white, borderWidth: 1, borderColor: c.line, borderRadius: 18, overflow: "hidden" },
+  first: { borderStyle: "dashed", borderColor: c.line2 },
   monogram: { position: "absolute", right: 10, fontFamily: f.serifBold, color: "rgba(255,255,255,.13)" },
   caption: { fontFamily: f.medium, fontSize: 11, letterSpacing: 0.7, textTransform: "uppercase", color: "rgba(255,255,255,.6)", padding: 12 },
   rating: { position: "absolute", top: 10, left: 10, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: c.cream, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6 },

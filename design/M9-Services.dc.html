@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe merchant — Services and pricing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-ink{background:#1A1513;color:#FBF7F2}
+.btn-out{background:#FFFFFF;color:#1A1513;border-color:#E6DCD2}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.card{background:#FFFFFF;border:1px solid #EDE4DA;border-radius:20px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:600;line-height:1}
+.pill-gold{background:#F6EBD2;color:#7A5A12}
+.pill-grey{background:#EFE5DA;color:#6B5F57}
+.pill-ok{background:#E3F2E7;color:#1F6B3A}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E6DCD2;background:#FFFFFF;border-radius:999px;padding:0 14px;min-height:40px;font:inherit;font-size:13px;font-weight:600;color:#1A1513;white-space:nowrap;cursor:pointer}
+.chip.on{background:#1A1513;color:#FBF7F2;border-color:#1A1513}
+.grp{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B5F57;margin:16px 0 8px}
+.svc{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EDE4DA;color:#1A1513}
+.svc:last-child{border-bottom:0}
+.svc .grab{color:#C9BCB0;flex:none}
+.svc b{display:block;font-size:14px;font-weight:600}
+.svc span{font-size:12px;color:#6B5F57}
+.svc .price{font-weight:700;font-size:14px;text-align:right;flex:none}
+.svc .price small{display:block;font-weight:500;font-size:11px;color:#6B5F57}
+.sw{width:44px;height:26px;border-radius:999px;background:#1A1513;position:relative;flex:none;border:0;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:21px;width:20px;height:20px;border-radius:50%;background:#FBF7F2}
+.sw.off{background:#D9CFC4}
+.sw.off::after{left:3px}
+.ai{background:#1A1513;color:#F4ECE3;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.tabbar{display:flex;justify-content:space-around;padding:10px 6px 26px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:#7A6E66;min-width:60px;min-height:48px}
+.tab.on{color:#1A1513}
+.tab svg{width:22px;height:22px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <div class="between">
+        <div class="row">
+          <a href="M11-More.dc.html" class="icon" aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+          </a>
+          <h1 class="serif" style="margin:0;font-size:26px;font-weight:600;line-height:1">Services</h1>
+        </div>
+        <a href="M9-Services.dc.html" class="btn btn-ink">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add
+        </a>
+      </div>
+
+      <div class="chips" style="margin-top:14px">
+        <sc-for list="{{ cats }}" as="c" hint-placeholder-count="4">
+          <button type="button" class="chip {{ c.cls }}" onClick="{{ c.pick }}">{{ c.name }}</button>
+        </sc-for>
+      </div>
+
+      <div class="ai" style="margin-top:14px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4zM5 17l.9 2.1L8 20l-2.1.9L5 23l-.9-2.1L2 20l2.1-.9z"></path></svg>
+        <div style="flex:1;font-size:13px;line-height:1.45">Your medium knotless books out 9 days ahead. Similar studios nearby charge <b>$195 to $210</b>. Raise it?</div>
+        <a href="M9-Services.dc.html" class="btn" style="background:#D4AF5A;color:#1A1513">Review</a>
+      </div>
+
+      <div class="grp"><span>Braids &amp; locs · 5</span><a href="M9-Services.dc.html" style="letter-spacing:0;text-transform:none;font-size:12px">Reorder</a></div>
+      <div class="card">
+        <sc-for list="{{ services }}" as="s" hint-placeholder-count="5">
+          <div class="svc">
+            <svg class="grab" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>
+            <a href="M9-Services.dc.html" style="flex:1;min-width:0;color:#1A1513"><b>{{ s.name }}</b><span>{{ s.meta }}</span></a>
+            <div class="price">{{ s.price }}<small>{{ s.dep }}</small></div>
+            <button type="button" class="sw {{ s.swCls }}" onClick="{{ s.toggle }}" aria-label="Bookable online"></button>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="grp"><span>Packages &amp; memberships · 2</span></div>
+      <div class="card">
+        <a href="M9-Services.dc.html" class="svc">
+          <span style="flex:1;min-width:0"><b>Retwist club · monthly</b><span>1 retwist a month + 10% off retail · 14 members</span></span>
+          <div class="price">$95<small>per month</small></div>
+          <span class="pill pill-ok">Live</span>
+        </a>
+        <a href="M9-Services.dc.html" class="svc">
+          <span style="flex:1;min-width:0"><b>5 silk presses</b><span>Pay for 4, get 5 · valid 6 months</span></span>
+          <div class="price">$300<small>save $75</small></div>
+          <span class="pill pill-grey">Draft</span>
+        </a>
+      </div>
+
+      <div class="grp"><span>Pricing rules</span></div>
+      <div class="card">
+        <a href="M9-Services.dc.html" class="svc"><span style="flex:1"><b>Peak pricing</b><span>+10% Fri after 4pm and all day Sat</span></span><span class="pill pill-gold">On</span></a>
+        <a href="M9-Services.dc.html" class="svc"><span style="flex:1"><b>New-client deposit</b><span>50% for first visit, then $40</span></span><span class="pill pill-gold">On</span></a>
+        <a href="M9-Services.dc.html" class="svc"><span style="flex:1"><b>Staff-level pricing</b><span>Junior, senior, master</span></span><span class="pill pill-grey">Off</span></a>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <a href="M1-Today.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Today</a>
+    <a href="M8-Week.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Calendar</a>
+    <a href="M3-Clients.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a6 6 0 0 0-5-5.9"></path></svg>Clients</a>
+    <a href="M4-Inbox.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>Inbox</a>
+    <a href="M11-More.dc.html" class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { cat: 'braids', off: ['boho'] }; }
+  renderVals() {
+    const { cat, off } = this.state;
+    const raw = [
+      { id: 'knotless', name: 'Knotless braids · medium', meta: '3 h 30 · 15 min cleanup · hair included', price: '$180', dep: '$40 deposit' },
+      { id: 'small', name: 'Knotless braids · small', meta: '5 h · 15 min cleanup · hair included', price: '$240', dep: '$60 deposit' },
+      { id: 'boho', name: 'Boho knotless', meta: '4 h · curly ends · consult required', price: '$220', dep: '$50 deposit' },
+      { id: 'takedown', name: 'Take-down', meta: '45 min · add-on only', price: '$30', dep: 'no deposit' },
+      { id: 'treat', name: 'Scalp treatment', meta: '20 min · add-on · processing time', price: '$25', dep: 'no deposit' }
+    ];
+    return {
+      cats: [['braids','Braids & locs'],['hair','Hair'],['addons','Add-ons'],['retail','Retail']].map(([id, name]) => ({ id, name, cls: cat === id ? 'on' : '', pick: () => this.setState({ cat: id }) })),
+      services: raw.map((s) => ({ ...s, swCls: off.includes(s.id) ? 'off' : '', toggle: () => this.setState({ off: off.includes(s.id) ? off.filter((x) => x !== s.id) : off.concat(s.id) }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

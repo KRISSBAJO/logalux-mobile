@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe customer — Choose a time</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-ink{background:#1A1513;color:#FBF7F2}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;line-height:1}
+.pill-gold{background:#F6EBD2;color:#7A5A12}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.avatar{width:36px;height:36px;border-radius:50%;background:#7A1F2B;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.who{display:flex;gap:10px}
+.who button{flex:1;display:flex;align-items:center;gap:10px;border:1px solid #E6DCD2;background:#FFFFFF;border-radius:16px;padding:10px 12px;font:inherit;text-align:left;cursor:pointer;color:#1A1513;min-height:56px}
+.who button.on{border-color:#1A1513;box-shadow:inset 0 0 0 1px #1A1513}
+.who b{font-size:14px;font-weight:600;display:block}
+.who span{font-size:12px;color:#6B5F57}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{border:0;background:transparent;border-radius:14px;padding:10px 0;font:inherit;font-size:11px;color:#6B5F57;cursor:pointer;min-height:60px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.day b{font-size:17px;color:#1A1513;font-weight:600}
+.day.on{background:#1A1513;color:#C9BCB0}
+.day.on b{color:#FBF7F2}
+.day.off{opacity:.35;cursor:default}
+.day i{width:5px;height:5px;border-radius:50%;background:#D4AF5A;display:block}
+.grp{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B5F57;margin:18px 0 10px}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.slot{border:1px solid #E6DCD2;background:#FFFFFF;border-radius:12px;min-height:44px;font:inherit;font-size:14px;font-weight:600;color:#1A1513;cursor:pointer}
+.slot.on{background:#1A1513;color:#FBF7F2;border-color:#1A1513}
+.slot.gone{color:#B5A99E;text-decoration:line-through;background:transparent;border-style:dashed;cursor:default}
+.bottom{padding:12px 20px 28px;border-top:1px solid #EDE4DA;background:#FBF7F2;display:flex;align-items:center;justify-content:space-between;gap:12px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <div class="row" style="gap:12px">
+        <a href="C3-Profile.dc.html" class="icon" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+        </a>
+        <div>
+          <h1 class="serif" style="margin:0;font-size:26px;font-weight:600;line-height:1">Choose a time</h1>
+          <div class="muted" style="font-size:13px;margin-top:4px">Knotless braids · medium · 3 h 30</div>
+        </div>
+      </div>
+
+      <div class="grp">With</div>
+      <div class="who">
+        <sc-for list="{{ pros }}" as="p" hint-placeholder-count="2">
+          <button type="button" class="{{ p.cls }}" onClick="{{ p.pick }}">
+            <span class="avatar" style="background:{{ p.tone }}">{{ p.ini }}</span>
+            <span><b>{{ p.name }}</b><span>{{ p.sub }}</span></span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div class="between" style="margin-top:20px">
+        <div class="grp" style="margin:0">October 2026</div>
+        <div class="row" style="gap:4px">
+          <button type="button" class="icon" style="width:36px;height:36px" aria-label="Previous week"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+          <button type="button" class="icon" style="width:36px;height:36px" aria-label="Next week"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+        </div>
+      </div>
+      <div class="days" style="margin-top:10px">
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+          <button type="button" class="day {{ d.cls }}" onClick="{{ d.pick }}"><span>{{ d.dow }}</span><b>{{ d.num }}</b><i style="opacity:{{ d.dot }}"></i></button>
+        </sc-for>
+      </div>
+
+      <div class="grp">Morning</div>
+      <div class="slots">
+        <sc-for list="{{ morning }}" as="s" hint-placeholder-count="4">
+          <button type="button" class="slot {{ s.cls }}" onClick="{{ s.pick }}">{{ s.t }}</button>
+        </sc-for>
+      </div>
+      <div class="grp">Afternoon</div>
+      <div class="slots">
+        <sc-for list="{{ afternoon }}" as="s" hint-placeholder-count="4">
+          <button type="button" class="slot {{ s.cls }}" onClick="{{ s.pick }}">{{ s.t }}</button>
+        </sc-for>
+      </div>
+
+      <div class="row" style="margin-top:18px;gap:10px;background:#F6EBD2;border-radius:14px;padding:12px 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A5A12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+        <span style="font-size:13px;color:#7A5A12;flex:1">Only slots long enough for 3 h 30 are shown.</span>
+        <a href="C10-Waitlist.dc.html" style="font-size:13px;font-weight:600;color:#7A5A12;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center">Join waitlist</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div>
+      <div style="font-size:12px;color:#6B5F57;font-weight:600;letter-spacing:.04em;text-transform:uppercase">{{ when }}</div>
+      <div style="font-size:18px;font-weight:700">{{ summary }}</div>
+    </div>
+    <a href="C5-Confirm.dc.html" class="btn btn-ink">Continue
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pro: 'ada', day: 10, slot: '10:00' }; }
+  renderVals() {
+    const { pro, day, slot } = this.state;
+    const pros = [
+      { id: 'ada', name: 'Ada Okafor', sub: 'Owner · 5.0', ini: 'AO', tone: '#7A1F2B' },
+      { id: 'any', name: 'Anyone available', sub: 'First open slot', ini: '✦', tone: '#1A1513' }
+    ].map((p) => ({ ...p, cls: pro === p.id ? 'on' : '', pick: () => this.setState({ pro: p.id }) }));
+    const week = [['Mon',5,false],['Tue',6,true],['Wed',7,true],['Thu',8,false],['Fri',9,true],['Sat',10,true],['Sun',11,false]];
+    const days = week.map(([dow, num, open]) => ({ dow, num, dot: open ? 1 : 0, cls: (day === num ? 'on ' : '') + (open ? '' : 'off'),
+      pick: () => { if (open) this.setState({ day: num, slot: null }); } }));
+    const mk = (t, gone) => ({ t, cls: gone ? 'gone' : (slot === t ? 'on' : ''), pick: () => { if (!gone) this.setState({ slot: t }); } });
+    const morning = [mk('08:00', true), mk('09:00', false), mk('10:00', false), mk('11:30', true)];
+    const afternoon = [mk('13:00', false), mk('14:30', true), mk('15:00', false), mk('16:30', false)];
+    const dow = week.find((w) => w[1] === day)[0];
+    return { pros, days, morning, afternoon,
+      when: slot ? 'Selected' : 'Pick a slot',
+      summary: slot ? dow + ' ' + day + ' Oct · ' + slot : dow + ' ' + day + ' Oct' };
+  }
+}
+</script>
+</body>
+</html>

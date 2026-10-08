@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe merchant — Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 24px}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:#1A1513;position:relative}
+.avatar{width:40px;height:40px;border-radius:50%;background:#1A1513;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex:none}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:20px}
+.stat{display:flex;flex-direction:column;gap:2px;padding:2px 0 2px 16px;border-left:1px solid #E6DCD2;color:#1A1513;min-height:44px;justify-content:center}
+.stat:first-child{padding-left:0;border-left:0}
+.stat b{font-size:24px;font-weight:600;line-height:1;letter-spacing:-.01em}
+.stat span{font-size:12px;color:#6B5F57;font-weight:500}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-top:22px}
+.day{border:0;background:transparent;padding:0;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:64px}
+.day small{font-size:11px;font-weight:500;color:#9A8E85;letter-spacing:.04em}
+.day b{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:#1A1513}
+.day.on b{background:#1A1513;color:#FBF7F2;font-weight:600}
+.day.on small{color:#1A1513;font-weight:600}
+.day i{width:4px;height:4px;border-radius:50%;background:#D4AF5A;display:block}
+.day.off b{color:#C9BCB0}
+.rule{height:1px;background:#EDE4DA;margin:20px 0 0}
+.tl{display:flex;flex-direction:column;gap:10px;padding:18px 24px 0}
+.now{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#6B5F57;margin-bottom:2px}
+.now b{color:#1A1513;font-weight:600}
+.late{color:#9B2335;font-weight:600;font-size:12px}
+.slot{display:flex;gap:14px;align-items:center;color:#1A1513}
+.slot time{width:42px;flex:none;font-size:13px;color:#6B5F57;font-weight:500}
+.bk{flex:1;background:#FFFFFF;border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;border:1px solid #EDE4DA}
+.bk.now-bk{border-color:#1A1513}
+.bk b{display:block;font-size:15px;font-weight:600;line-height:1.25}
+.bk span{display:block;font-size:12.5px;color:#6B5F57;margin-top:3px}
+.tag{font-size:11px;font-weight:600;color:#7A5A12;background:#F6EBD2;border-radius:999px;padding:4px 8px;line-height:1;flex:none}
+.tag.ok{color:#1F6B3A;background:#E3F2E7}
+.tag.new{color:#1F4B7A;background:#E4ECF7}
+.gap{flex:1;border:1px dashed #C9BCB4;border-radius:16px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;color:#6B5F57;font-size:13.5px}
+.gap a{font-weight:600;min-height:40px;display:inline-flex;align-items:center}
+.av{width:36px;height:36px;border-radius:50%;background:#7A1F2B;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex:none}
+.fab{position:absolute;right:24px;bottom:104px;width:56px;height:56px;border-radius:50%;background:#1A1513;color:#FBF7F2;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(26,21,19,.25)}
+.tabbar{display:flex;justify-content:space-around;padding:10px 6px 26px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:#7A6E66;min-width:60px;min-height:48px}
+.tab.on{color:#1A1513}
+.tab svg{width:22px;height:22px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:54px">
+      <div class="between">
+        <span class="avatar">AO</span>
+        <a href="M4-Inbox.dc.html" class="icon" aria-label="Inbox, 2 unread">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>
+          <span style="position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#7A1F2B"></span>
+        </a>
+      </div>
+
+      <div style="margin-top:22px">
+        <div class="muted" style="font-size:13px;font-weight:500">Saturday</div>
+        <h1 class="serif" style="margin:2px 0 0;font-size:44px;font-weight:500;line-height:1;letter-spacing:-.01em">October 10</h1>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><b>6</b><span>bookings</span></div>
+        <a href="M5-Money.dc.html" class="stat"><b>$585</b><span>expected</span></a>
+        <a href="M3-Clients.dc.html" class="stat"><b style="color:#9A7A1E">1</b><span>gap to fill</span></a>
+      </div>
+
+      <div class="days">
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+          <button type="button" class="day {{ d.cls }}" onClick="{{ d.pick }}"><small>{{ d.dow }}</small><b>{{ d.num }}</b><i style="opacity:{{ d.dot }}"></i></button>
+        </sc-for>
+      </div>
+      <div class="rule"></div>
+    </div>
+
+    <div class="tl">
+      <div class="now"><span><b>Now 09:40</b> · Zara is in the chair</span><span class="late">5 min behind</span></div>
+      <a href="M2-Booking.dc.html" class="slot"><time>09:00</time><div class="bk now-bk"><span class="av" style="background:#1F2A33">ZM</span><div style="flex:1;min-width:0"><b>Zara M. · Skin fade + beard</b><span>45 min · Paid · In progress</span></div><span class="tag new">New</span></div></a>
+      <a href="M2-Booking.dc.html" class="slot"><time>10:00</time><div class="bk"><span class="av">KA</span><div style="flex:1;min-width:0"><b>Kemi A. · Knotless braids</b><span>3 h 30 · $140 due at checkout</span></div><span class="tag">Deposit</span></div></a>
+      <div class="slot"><time>13:30</time><div class="gap"><span>60 min open</span><a href="M3-Clients.dc.html">Offer to waitlist</a></div></div>
+      <a href="M2-Booking.dc.html" class="slot"><time>14:30</time><div class="bk"><span class="av" style="background:#2E2538">TA</span><div style="flex:1;min-width:0"><b>Tomi A. · Silk press</b><span>1 h 30 · Card on file</span></div></div></a>
+      <a href="M2-Booking.dc.html" class="slot"><time>16:00</time><div class="bk"><span class="av" style="background:#4A3426">GE</span><div style="flex:1;min-width:0"><b>Grace E. · Lash fill</b><span>1 h · Paid</span></div><span class="tag ok">Paid</span></div></a>
+      <a href="M2-Booking.dc.html" class="slot"><time>17:15</time><div class="bk"><span class="av" style="background:#3A3A2E">BK</span><div style="flex:1;min-width:0"><b>Bola K. · Gel manicure</b><span>50 min · Deposit paid</span></div></div></a>
+    </div>
+
+    <a href="M13-NewBooking.dc.html" class="fab" aria-label="New booking">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    </a>
+  </div>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <a href="M1-Today.dc.html" class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Today</a>
+    <a href="M8-Week.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Calendar</a>
+    <a href="M3-Clients.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a6 6 0 0 0-5-5.9"></path></svg>Clients</a>
+    <a href="M4-Inbox.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>Inbox</a>
+    <a href="M11-More.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { day: 10 }; }
+  renderVals() {
+    const day = this.state.day;
+    const week = [['M',5,false,false],['T',6,true,true],['W',7,true,true],['T',8,true,true],['F',9,true,true],['S',10,true,true],['S',11,false,false]];
+    return { days: week.map(([dow, num, open, has]) => ({ dow, num, dot: has && day !== num ? 1 : 0, cls: (day === num ? 'on ' : '') + (open ? '' : 'off'), pick: () => this.setState({ day: num }) })) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe customer — Chat with Ada</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#F4ECE2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.hdr{background:#FBF7F2;padding:54px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #EDE4DA}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.avatar{width:40px;height:40px;border-radius:50%;background:#7A1F2B;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:600;line-height:1}
+.pill-ok{background:#E3F2E7;color:#1F6B3A}
+.msgs{flex:1;display:flex;flex-direction:column;gap:10px;padding:16px}
+.day{text-align:center;font-size:11px;color:#6B5F57;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin:4px 0}
+.m{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.45}
+.m.them{background:#FFFFFF;border:1px solid #EDE4DA;border-bottom-left-radius:6px;align-self:flex-start}
+.m.me{background:#1A1513;color:#FBF7F2;border-bottom-right-radius:6px;align-self:flex-end}
+.m time{display:block;font-size:10px;margin-top:4px;opacity:.6}
+.sys{align-self:center;background:#F6EBD2;color:#7A5A12;border-radius:14px;padding:10px 14px;font-size:12px;display:flex;gap:8px;align-items:center;max-width:90%}
+.bcard{align-self:flex-start;background:#FFFFFF;border:1px solid #EDE4DA;border-radius:16px;padding:12px 14px;max-width:85%;color:#1A1513}
+.bcard b{display:block;font-size:14px;font-weight:600}
+.bcard span{font-size:12px;color:#6B5F57}
+.quick{display:flex;gap:8px;padding:0 16px 10px;overflow:hidden}
+.quick a{border:1px solid #E6DCD2;background:#FFFFFF;border-radius:999px;padding:0 14px;min-height:40px;display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#1A1513;white-space:nowrap}
+.compose{display:flex;align-items:center;gap:8px;padding:10px 12px 28px;background:#FBF7F2;border-top:1px solid #EDE4DA}
+.compose label{flex:1;display:flex;align-items:center;background:#FFFFFF;border:1px solid #E6DCD2;border-radius:999px;padding:0 16px;min-height:46px}
+.compose input{border:0;background:transparent;font:inherit;font-size:14px;flex:1;outline:none;min-width:0;color:#1A1513}
+.send{width:46px;height:46px;border-radius:50%;background:#1A1513;color:#FBF7F2;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="hdr">
+    <a href="C6-Bookings.dc.html" class="icon" aria-label="Back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+    </a>
+    <span class="avatar">AO</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:15px">Ada's Braid Studio</div>
+      <div class="muted" style="font-size:12px">Usually replies within an hour</div>
+    </div>
+    <a href="C3-Profile.dc.html" class="icon" aria-label="View profile">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+    </a>
+  </div>
+
+  <div class="body">
+    <div class="msgs">
+      <div class="day">Thu 1 Oct</div>
+      <div class="bcard">
+        <span class="pill pill-ok" style="margin-bottom:6px">Booking confirmed</span>
+        <b>Knotless braids · medium</b>
+        <span>Sat 10 Oct · 10:00 to 13:30 · $40 deposit paid</span>
+      </div>
+      <div class="m me">Hi Ada! Same as last time please, slightly longer.<time>10:14</time></div>
+      <div class="m them">Got it, Kemi! I'll have the 30 ends ready. See you Saturday ✨<time>10:52</time></div>
+      <div class="day">Today</div>
+      <div class="sys">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path></svg>
+        Reminder: your appointment is tomorrow at 10:00. Reply "C" to confirm.
+      </div>
+      <div class="m me">C<time>08:02</time></div>
+      <div class="m them">Confirmed! Quick note: I'm running about 5 minutes behind this morning, but you're all good for 10.<time>09:38</time></div>
+    </div>
+
+    <div class="quick">
+      <a href="C4-Time.dc.html">Reschedule</a>
+      <a href="C6-Bookings.dc.html">Directions</a>
+      <a href="C7-Chat.dc.html">Send a photo</a>
+      <a href="C6-Bookings.dc.html">Cancel</a>
+    </div>
+  </div>
+
+  <div class="compose">
+    <label><span class="sr">Message</span><input type="text" placeholder="Message Ada…"></label>
+    <button type="button" class="send" aria-label="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"></path></svg>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe merchant — Clients</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-ink{background:#1A1513;color:#FBF7F2}
+.btn-soft{background:#F1E8DD;color:#1A1513}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:600;line-height:1}
+.pill-ok{background:#E3F2E7;color:#1F6B3A}
+.pill-gold{background:#F6EBD2;color:#7A5A12}
+.pill-wine{background:#F6E3E6;color:#7A1F2B}
+.pill-new{background:#E4ECF7;color:#1F4B7A}
+.pill-grey{background:#EFE5DA;color:#6B5F57}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.search{display:flex;align-items:center;gap:10px;background:#FFFFFF;border:1px solid #E6DCD2;border-radius:16px;padding:0 14px;min-height:50px}
+.search input{border:0;background:transparent;font:inherit;font-size:15px;flex:1;outline:none;min-width:0;color:#1A1513}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E6DCD2;background:#FFFFFF;border-radius:999px;padding:0 14px;min-height:40px;font:inherit;font-size:13px;font-weight:600;color:#1A1513;white-space:nowrap;cursor:pointer}
+.chip.on{background:#1A1513;color:#FBF7F2;border-color:#1A1513}
+.chip small{font-weight:500;color:#9A8E85}
+.chip.on small{color:#C9BCB0}
+.avatar{width:44px;height:44px;border-radius:50%;background:#7A1F2B;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+.client{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EDE4DA;color:#1A1513}
+.client b{display:block;font-size:15px;font-weight:600}
+.client span{font-size:12px;color:#6B5F57}
+.insight{background:#1A1513;color:#F4ECE3;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.tabbar{display:flex;justify-content:space-around;padding:10px 6px 26px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:#7A6E66;min-width:60px;min-height:48px}
+.tab.on{color:#1A1513}
+.tab svg{width:22px;height:22px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <div class="between">
+        <h1 class="serif" style="margin:0;font-size:30px;font-weight:600;line-height:1">Clients <span class="muted" style="font-size:18px;font-family:'DM Sans',sans-serif;font-weight:500">184</span></h1>
+        <div class="row" style="gap:8px">
+          <button type="button" class="icon" aria-label="Import clients"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg></button>
+          <button type="button" class="icon" aria-label="Add client" style="background:#1A1513;color:#FBF7F2;border:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        </div>
+      </div>
+
+      <label class="search" style="margin-top:16px">
+        <span class="sr">Search clients</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input type="text" placeholder="Name or phone">
+      </label>
+
+      <div class="chips" style="margin-top:12px">
+        <sc-for list="{{ segs }}" as="s" hint-placeholder-count="5">
+          <button type="button" class="chip {{ s.cls }}" onClick="{{ s.pick }}">{{ s.name }} <small>{{ s.n }}</small></button>
+        </sc-for>
+      </div>
+
+      <div class="insight" style="margin-top:14px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4zM5 17l.9 2.1L8 20l-2.1.9L5 23l-.9-2.1L2 20l2.1-.9z"></path></svg>
+        <div style="flex:1;font-size:13px;line-height:1.45"><b>23 clients</b> are past their usual rebook date. Send a win-back message to all of them?</div>
+        <a href="M4-Inbox.dc.html" class="btn" style="background:#D4AF5A;color:#1A1513">Send</a>
+      </div>
+    </div>
+
+    <div class="pad" style="margin-top:6px">
+      <sc-for list="{{ clients }}" as="c" hint-placeholder-count="6">
+        <a href="M2-Booking.dc.html" class="client">
+          <span class="avatar" style="background:{{ c.tone }}">{{ c.ini }}</span>
+          <span style="flex:1;min-width:0"><b>{{ c.name }}</b><span>{{ c.sub }}</span></span>
+          <span class="pill {{ c.pillCls }}">{{ c.tag }}</span>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <a href="M1-Today.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Today</a>
+    <a href="M8-Week.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Calendar</a>
+    <a href="M3-Clients.dc.html" class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a6 6 0 0 0-5-5.9"></path></svg>Clients</a>
+    <a href="M4-Inbox.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>Inbox</a>
+    <a href="M11-More.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { seg: 'all' }; }
+  renderVals() {
+    const seg = this.state.seg;
+    const segs = [['all','All',184],['new','New',12],['vip','VIP',21],['lapsed','Lapsed',23],['waitlist','Waitlist',4]]
+      .map(([id, name, n]) => ({ id, name, n, cls: seg === id ? 'on' : '', pick: () => this.setState({ seg: id }) }));
+    const all = [
+      { name: 'Kemi Adeyemi', sub: 'Next: Sat 10 Oct · 4 visits · $720', ini: 'KA', tone: '#7A1F2B', tag: 'VIP', pillCls: 'pill-gold', segs: ['vip'] },
+      { name: 'Zara Mensah', sub: 'In the chair now · first visit', ini: 'ZM', tone: '#1F2A33', tag: 'New', pillCls: 'pill-new', segs: ['new'] },
+      { name: 'Tomi Alade', sub: 'Next: today 14:30 · 9 visits · $1,180', ini: 'TA', tone: '#2E2538', tag: 'VIP', pillCls: 'pill-gold', segs: ['vip'] },
+      { name: 'Grace Eze', sub: 'Last: 12 Sep · usually every 3 weeks', ini: 'GE', tone: '#4A3426', tag: 'Due', pillCls: 'pill-wine', segs: ['lapsed'] },
+      { name: 'Bola Kalu', sub: 'Next: today 17:15 · 2 visits', ini: 'BK', tone: '#3A3A2E', tag: 'Regular', pillCls: 'pill-grey', segs: [] },
+      { name: 'Ifeoma Nwosu', sub: 'Last: 20 Jul · 1 no-show', ini: 'IN', tone: '#5A4A3A', tag: 'Lapsed', pillCls: 'pill-wine', segs: ['lapsed'] },
+      { name: 'Dami Osei', sub: 'Waiting for: Sat, any time', ini: 'DO', tone: '#2A3A33', tag: 'Waitlist', pillCls: 'pill-ok', segs: ['waitlist'] }
+    ];
+    return { segs, clients: seg === 'all' ? all : all.filter((c) => c.segs.includes(seg)) };
+  }
+}
+</script>
+</body>
+</html>

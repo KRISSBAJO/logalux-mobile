@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe merchant — Business and settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-gold{background:#D4AF5A;color:#1A1513}
+.btn-ghost{background:transparent;color:#F4ECE3;border-color:rgba(244,236,227,.3)}
+.card{background:#FFFFFF;border:1px solid #EDE4DA;border-radius:20px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:600;line-height:1}
+.pill-ok{background:#E3F2E7;color:#1F6B3A}
+.pill-gold{background:#F6EBD2;color:#7A5A12}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.biz{background:#120E0D;color:#F4ECE3;border-radius:22px;padding:18px}
+.avatar{width:56px;height:56px;border-radius:16px;background:#D4AF5A;color:#1A1513;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:none}
+.link{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:14px;font-size:13px}
+.link b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.grp{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B5F57;margin:16px 0 8px}
+.item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EDE4DA;color:#1A1513;min-height:54px}
+.item:last-child{border-bottom:0}
+.item .ic{width:36px;height:36px;border-radius:10px;background:#F4ECE2;display:flex;align-items:center;justify-content:center;flex:none;color:#1A1513}
+.item b{display:block;font-size:14px;font-weight:600}
+.item span{font-size:12px;color:#6B5F57}
+.chev{color:#9A8E85;flex:none}
+.tabbar{display:flex;justify-content:space-around;padding:10px 6px 26px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:#7A6E66;min-width:60px;min-height:48px}
+.tab.on{color:#1A1513}
+.tab svg{width:22px;height:22px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <h1 class="serif" style="margin:0;font-size:30px;font-weight:600;line-height:1">Business</h1>
+
+      <div class="biz" style="margin-top:16px">
+        <div class="row" style="gap:14px">
+          <span class="avatar">A</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:17px">Ada's Braid Studio</div>
+            <div style="font-size:13px;color:#C9BCB0">East Nashville · Solo · Free plan</div>
+            <div class="row" style="gap:6px;margin-top:6px"><span class="pill pill-ok">Verified</span><span class="pill pill-gold">5.0 · 212 reviews</span></div>
+          </div>
+        </div>
+        <div class="link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+          <b>logaluxe.com/@ada</b>
+          <a href="M11-More.dc.html" class="btn btn-gold" style="min-height:34px;padding:0 12px">Copy</a>
+          <a href="M11-More.dc.html" class="btn btn-ghost" style="min-height:34px;padding:0 12px">QR</a>
+        </div>
+        <div style="font-size:12px;color:#C9BCB0;margin-top:10px">62% of your bookings came through this link last month.</div>
+      </div>
+
+      <div class="grp">Set up</div>
+      <div class="card">
+        <a href="M9-Services.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Services &amp; pricing</b><span>12 services · 2 packages · peak pricing on</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+        <a href="M10-Hours.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Hours &amp; policies</b><span>Tue to Sat · 24 h free cancellation · $40 deposit</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+        <a href="M11-More.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="3.5"></circle></svg></span>
+          <span style="flex:1;min-width:0"><b>Profile &amp; portfolio</b><span>24 photos · bio · 3 amenities</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+        <a href="M11-More.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M19 8v6M22 11h-6"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Staff &amp; chairs</b><span>Just you · add staff or rent a chair</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+      </div>
+
+      <div class="grp">Grow</div>
+      <div class="card">
+        <a href="M3-Clients.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 9a4 4 0 0 1 0 6"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Marketing</b><span>Win-back, birthday, rebook reminders · 3 automations on</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+        <a href="M11-More.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 7v13M12 7c-2-3-6-3-6 0M12 7c2-3 6-3 6 0"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Loyalty &amp; referrals</b><span>Points per visit · give $10, get $10</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+        <a href="M11-More.dc.html" class="item">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 14l4-4 4 4 5-6"></path></svg></span>
+          <span style="flex:1;min-width:0"><b>Reports &amp; insights</b><span>Weekly note arrives Mondays at 8:00</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </a>
+      </div>
+
+      <div class="grp">Account</div>
+      <div class="card">
+        <a href="M5-Money.dc.html" class="item"><span style="flex:1"><b>Payouts &amp; bank</b><span>Chase ···· 4471 · daily</span></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
+        <a href="M11-More.dc.html" class="item"><span style="flex:1"><b>Plan</b><span>Free · upgrade to Pro for staff, POS, reports</span></span><span class="pill pill-gold">Upgrade</span></a>
+        <a href="M11-More.dc.html" class="item"><span style="flex:1"><b>Notifications</b><span>New booking, cancellation, message, payout</span></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
+        <a href="M11-More.dc.html" class="item"><span style="flex:1"><b>Calendar sync</b><span>Google Calendar connected · two-way</span></span><span class="pill pill-ok">On</span></a>
+        <a href="M11-More.dc.html" class="item"><span style="flex:1"><b>Help &amp; support</b><span>Chat with us · usually under 10 minutes</span></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <a href="M1-Today.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Today</a>
+    <a href="M8-Week.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Calendar</a>
+    <a href="M3-Clients.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a6 6 0 0 0-5-5.9"></path></svg>Clients</a>
+    <a href="M4-Inbox.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>Inbox</a>
+    <a href="M11-More.dc.html" class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

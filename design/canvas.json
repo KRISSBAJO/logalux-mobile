@@ -1,0 +1,42 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-07T19:05:00Z" },
+  "title": "LogaLuxe Mobile Apps",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "A1-SignIn.dc.html":   { "x": -470, "y": 0,    "w": 390, "h": 844, "title": "Shared · Sign in", "is_interactive": true, "radius": 44 },
+    "Main.dc.html":        { "x": 0,    "y": 0,    "w": 390, "h": 844, "title": "Customer · Home", "is_interactive": true, "radius": 44 },
+    "C2-Results.dc.html":  { "x": 470,  "y": 0,    "w": 390, "h": 844, "title": "Customer · Results", "is_interactive": true, "radius": 44 },
+    "C3-Profile.dc.html":  { "x": 940,  "y": 0,    "w": 390, "h": 844, "title": "Customer · Professional", "is_interactive": true, "radius": 44 },
+    "C4-Time.dc.html":     { "x": 1410, "y": 0,    "w": 390, "h": 844, "title": "Customer · Choose time", "is_interactive": true, "radius": 44 },
+    "C10-Waitlist.dc.html":{ "x": 1880, "y": 0,    "w": 390, "h": 844, "title": "Customer · Waitlist", "is_interactive": true, "radius": 44 },
+    "C5-Confirm.dc.html":  { "x": 2350, "y": 0,    "w": 390, "h": 844, "title": "Customer · Confirm & pay", "is_interactive": true, "radius": 44 },
+    "C6-Bookings.dc.html": { "x": 2820, "y": 0,    "w": 390, "h": 844, "title": "Customer · My bookings", "is_interactive": true, "radius": 44 },
+    "C7-Chat.dc.html":     { "x": 3290, "y": 0,    "w": 390, "h": 844, "title": "Customer · Chat", "is_interactive": true, "radius": 44 },
+    "C8-Review.dc.html":   { "x": 3760, "y": 0,    "w": 390, "h": 844, "title": "Customer · Leave a review", "is_interactive": true, "radius": 44 },
+    "C9-Account.dc.html":  { "x": 4230, "y": 0,    "w": 390, "h": 844, "title": "Customer · Account & wallet", "is_interactive": true, "radius": 44 },
+    "M12-Onboarding.dc.html": { "x": -470, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Onboarding", "is_interactive": true, "radius": 44 },
+    "M1-Today.dc.html":    { "x": 0,    "y": 1300, "w": 390, "h": 844, "title": "Merchant · Today", "is_interactive": true, "radius": 44 },
+    "M13-NewBooking.dc.html": { "x": 470, "y": 1300, "w": 390, "h": 844, "title": "Merchant · New booking", "is_interactive": true, "radius": 44 },
+    "M2-Booking.dc.html":  { "x": 940,  "y": 1300, "w": 390, "h": 844, "title": "Merchant · Booking detail", "is_interactive": true, "radius": 44 },
+    "M6-Checkout.dc.html": { "x": 1410, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Checkout", "is_interactive": true, "radius": 44 },
+    "M8-Week.dc.html":     { "x": 1880, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Calendar week", "is_interactive": true, "radius": 44 },
+    "M3-Clients.dc.html":  { "x": 2350, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Clients", "is_interactive": true, "radius": 44 },
+    "M7-Client.dc.html":   { "x": 2820, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Client profile", "is_interactive": true, "radius": 44 },
+    "M4-Inbox.dc.html":    { "x": 3290, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Inbox", "is_interactive": true, "radius": 44 },
+    "M5-Money.dc.html":    { "x": 3760, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Money", "is_interactive": true, "radius": 44 },
+    "M9-Services.dc.html": { "x": 4230, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Services & pricing", "is_interactive": true, "radius": 44 },
+    "M10-Hours.dc.html":   { "x": 4700, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Hours & policies", "is_interactive": true, "radius": 44 },
+    "M11-More.dc.html":    { "x": 5170, "y": 1300, "w": 390, "h": 844, "title": "Merchant · Business & settings", "is_interactive": true, "radius": 44 }
+  },
+  "order": [
+    "A1-SignIn.dc.html", "Main.dc.html", "C2-Results.dc.html", "C3-Profile.dc.html", "C4-Time.dc.html", "C10-Waitlist.dc.html", "C5-Confirm.dc.html", "C6-Bookings.dc.html", "C7-Chat.dc.html", "C8-Review.dc.html", "C9-Account.dc.html",
+    "M12-Onboarding.dc.html", "M1-Today.dc.html", "M13-NewBooking.dc.html", "M2-Booking.dc.html", "M6-Checkout.dc.html", "M8-Week.dc.html", "M3-Clients.dc.html", "M7-Client.dc.html", "M4-Inbox.dc.html", "M5-Money.dc.html", "M9-Services.dc.html", "M10-Hours.dc.html", "M11-More.dc.html"
+  ],
+  "notes": {
+    "customer": { "x": -470, "y": -300, "text": "Customer app · sign in, find, book, pay, rebook, review", "kind": "title1", "maxW": 5090 },
+    "merchant": { "x": -470, "y": 1000, "text": "Merchant app · set up and run the whole business from your phone", "kind": "title1", "maxW": 6030 }
+  },
+  "designSystems": []
+}

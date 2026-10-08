@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe customer — Join the waitlist</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;border-radius:999px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-ink{background:#1A1513;color:#FBF7F2}
+.btn-out{background:#FFFFFF;color:#1A1513;border-color:#E6DCD2}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.card{background:#FFFFFF;border:1px solid #EDE4DA;border-radius:20px;padding:16px}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:#7A1F2B;color:#F4ECE3;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+.grp{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B5F57;margin:20px 0 10px}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{border:1px solid #E6DCD2;background:#FFFFFF;border-radius:14px;padding:8px 0;font:inherit;font-size:11px;color:#6B5F57;cursor:pointer;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.day b{font-size:16px;color:#1A1513;font-weight:600}
+.day.on{background:#1A1513;border-color:#1A1513;color:#C9BCB0}
+.day.on b{color:#FBF7F2}
+.day.off{opacity:.35;cursor:default}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;border:1px solid #E6DCD2;background:#FFFFFF;border-radius:14px;min-height:48px;font:inherit;font-size:14px;font-weight:600;color:#1A1513;cursor:pointer}
+.seg button.on{background:#1A1513;color:#FBF7F2;border-color:#1A1513}
+.how{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #EDE4DA}
+.how:last-child{border-bottom:0}
+.how .n{width:28px;height:28px;border-radius:50%;background:#F6EBD2;color:#7A5A12;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.how b{display:block;font-size:14px;font-weight:600}
+.how span{font-size:13px;color:#6B5F57;line-height:1.45}
+.pos{background:#1A1513;color:#F4ECE3;border-radius:22px;padding:22px;text-align:center}
+.pos .big{font-size:64px;line-height:1;font-weight:500}
+.pos small{display:block;font-size:12px;color:#C9BCB0;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.offer{background:#F6EBD2;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.bottom{padding:12px 24px 28px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <div class="row">
+        <a href="C4-Time.dc.html" class="icon" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+        </a>
+        <h1 class="serif" style="margin:0;font-size:26px;font-weight:600;line-height:1">{{ title }}</h1>
+      </div>
+
+      <sc-if value="{{ form }}" hint-placeholder-val="{{ true }}">
+        <div class="card row" style="margin-top:18px;gap:14px">
+          <span class="avatar">AO</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px">Knotless braids · medium with Ada</div>
+            <div class="muted" style="font-size:13px;margin-top:2px">3 h 30 · $180 · Saturdays are fully booked for 3 weeks</div>
+          </div>
+        </div>
+
+        <div class="grp">Which days work?</div>
+        <div class="days">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+            <button type="button" class="day {{ d.cls }}" onClick="{{ d.pick }}"><span>{{ d.dow }}</span><b>{{ d.num }}</b></button>
+          </sc-for>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:8px">Pick as many as you like. Faded days are closed.</div>
+
+        <div class="grp">Time of day</div>
+        <div class="seg">
+          <sc-for list="{{ times }}" as="t" hint-placeholder-count="3">
+            <button type="button" class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.name }}</button>
+          </sc-for>
+        </div>
+
+        <div class="grp">How it works</div>
+        <div class="card" style="padding:4px 16px">
+          <div class="how"><span class="n">1</span><div><b>A slot opens</b><span>Someone cancels or Ada adds hours.</span></div></div>
+          <div class="how"><span class="n">2</span><div><b>You get a WhatsApp</b><span>Everyone on the list is told at once, in order of joining.</span></div></div>
+          <div class="how"><span class="n">3</span><div><b>First to claim wins</b><span>Tap Book in the message. The slot is held for you for 15 minutes.</span></div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ joined }}" hint-placeholder-val="{{ false }}">
+        <div class="pos" style="margin-top:18px">
+          <small>Your place</small>
+          <div class="big serif">#3</div>
+          <div style="font-size:13px;color:#C9BCB0;margin-top:6px">on Ada's list for {{ summary }}</div>
+        </div>
+        <div class="offer" style="margin-top:14px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5A12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>
+          <div style="flex:1;font-size:13px;color:#7A5A12;line-height:1.45">We'll message you on WhatsApp the moment a slot opens. Keep notifications on so you don't miss it.</div>
+        </div>
+        <div class="grp">Meanwhile</div>
+        <div class="card" style="padding:4px 16px">
+          <a href="C4-Time.dc.html" class="how" style="color:#1A1513"><span class="n" style="background:#E3F2E7;color:#1F6B3A">✓</span><div><b>Book Ada on a weekday</b><span>Tue 13 Oct at 9:00 and Thu 15 Oct at 10:00 are open.</span></div></a>
+          <a href="C2-Results.dc.html" class="how" style="color:#1A1513"><span class="n">→</span><div><b>See similar braiders nearby</b><span>Knotless by Nia has Saturday 16:30 open, 4.6 mi away.</span></div></a>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <sc-if value="{{ form }}" hint-placeholder-val="{{ true }}">
+      <button type="button" class="btn btn-ink" style="width:100%" onClick="{{ join }}">Join the waitlist</button>
+      <div class="muted" style="font-size:11px;text-align:center;margin-top:8px">Free. No deposit until you claim a slot.</div>
+    </sc-if>
+    <sc-if value="{{ joined }}" hint-placeholder-val="{{ false }}">
+      <div class="row" style="gap:10px">
+        <button type="button" class="btn btn-out" style="flex:1" onClick="{{ leave }}">Leave list</button>
+        <a href="C6-Bookings.dc.html" class="btn btn-ink" style="flex:1.4">Done</a>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { picked: [17, 24], time: 'any', joined: false }; }
+  renderVals() {
+    const { picked, time, joined } = this.state;
+    const week = [['Sat',10,true],['Sat',17,true],['Sat',24,true],['Sat',31,true],['Sun',11,false],['Sun',18,false],['Sun',25,false]];
+    const days = week.map(([dow, num, open]) => ({ dow, num, cls: (picked.includes(num) ? 'on ' : '') + (open ? '' : 'off'),
+      pick: () => { if (open) this.setState({ picked: picked.includes(num) ? picked.filter((p) => p !== num) : picked.concat(num) }); } }));
+    const times = [['morning','Morning'],['afternoon','Afternoon'],['any','Any time']].map(([id, name]) => ({ id, name, cls: time === id ? 'on' : '', pick: () => this.setState({ time: id }) }));
+    const sorted = picked.slice().sort((a, b) => a - b);
+    return {
+      form: !joined, joined,
+      title: joined ? "You're on the list" : 'Join the waitlist',
+      days, times,
+      summary: (sorted.length ? 'Sat ' + sorted.join(', ') + ' Oct' : 'any Saturday') + (time === 'any' ? '' : ', ' + time + 's'),
+      join: () => this.setState({ joined: true }),
+      leave: () => this.setState({ joined: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

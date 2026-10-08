@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LogaLuxe merchant — Hours and policies</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F2;color:#1A1513;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#7A1F2B;text-decoration:none}a:hover{color:#5A1420}
+*{box-sizing:border-box}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.app{width:390px;height:844px;display:flex;flex-direction:column;background:#FBF7F2;overflow:hidden;position:relative}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-out{background:#FFFFFF;color:#1A1513;border-color:#E6DCD2}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #EDE4DA;color:#1A1513}
+.card{background:#FFFFFF;border:1px solid #EDE4DA;border-radius:20px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:600;line-height:1}
+.pill-gold{background:#F6EBD2;color:#7A5A12}
+.muted{color:#6B5F57}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #E6DCD2}
+.tabs button{flex:1;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#7A6E66;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:#1A1513;border-bottom-color:#1A1513}
+.grp{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B5F57;margin:16px 0 8px}
+.dayrow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EDE4DA;min-height:56px}
+.dayrow:last-child{border-bottom:0}
+.dayrow .d{width:40px;font-weight:600;font-size:14px}
+.dayrow .t{flex:1;font-size:14px}
+.dayrow .t small{display:block;font-size:12px;color:#6B5F57}
+.dayrow .t.off{color:#9A8E85}
+.sw{width:44px;height:26px;border-radius:999px;background:#1A1513;position:relative;flex:none;border:0;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:21px;width:20px;height:20px;border-radius:50%;background:#FBF7F2}
+.sw.off{background:#D9CFC4}
+.sw.off::after{left:3px}
+.set{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #EDE4DA;color:#1A1513;min-height:56px}
+.set:last-child{border-bottom:0}
+.set b{display:block;font-size:14px;font-weight:600}
+.set span{font-size:12px;color:#6B5F57;line-height:1.4}
+.val{font-size:14px;font-weight:600;color:#7A1F2B;flex:none}
+.stepper{display:inline-flex;align-items:center;border:1px solid #E6DCD2;border-radius:999px;background:#FFFFFF}
+.stepper button{width:40px;height:40px;border:0;background:transparent;font:inherit;font-size:18px;cursor:pointer;color:#1A1513}
+.stepper b{min-width:44px;text-align:center;font-size:14px}
+.preview{background:#1A1513;color:#F4ECE3;border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.5}
+.preview small{display:block;font-size:11px;color:#C9BCB0;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.tabbar{display:flex;justify-content:space-around;padding:10px 6px 26px;border-top:1px solid #EDE4DA;background:#FBF7F2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:#7A6E66;min-width:60px;min-height:48px}
+.tab.on{color:#1A1513}
+.tab svg{width:22px;height:22px}
+</style>
+</helmet>
+
+<div class="app">
+  <div class="body">
+    <div class="pad" style="padding-top:58px">
+      <div class="row">
+        <a href="M11-More.dc.html" class="icon" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+        </a>
+        <h1 class="serif" style="margin:0;font-size:26px;font-weight:600;line-height:1">Hours &amp; policies</h1>
+      </div>
+
+      <div class="tabs" style="margin-top:14px">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+          <button type="button" class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.name }}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showHours }}" hint-placeholder-val="{{ true }}">
+        <div class="grp">Weekly hours · East Nashville</div>
+        <div class="card">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+            <div class="dayrow">
+              <span class="d">{{ d.name }}</span>
+              <span class="t {{ d.tCls }}">{{ d.hours }}<small>{{ d.sub }}</small></span>
+              <button type="button" class="sw {{ d.swCls }}" onClick="{{ d.toggle }}" aria-label="Open on {{ d.name }}"></button>
+            </div>
+          </sc-for>
+        </div>
+        <div class="row" style="margin-top:10px;gap:8px">
+          <a href="M10-Hours.dc.html" class="btn btn-out" style="flex:1">Add time off</a>
+          <a href="M10-Hours.dc.html" class="btn btn-out" style="flex:1">Holiday hours</a>
+        </div>
+        <div class="grp">Booking window</div>
+        <div class="card">
+          <div class="set"><span style="flex:1"><b>Clients can book from</b><span>No same-hour surprises</span></span><span class="val">2 h ahead</span></div>
+          <div class="set"><span style="flex:1"><b>Up to</b><span>How far ahead the calendar opens</span></span><span class="val">8 weeks</span></div>
+          <div class="set"><span style="flex:1"><b>Slot interval</b><span>Smart slotting hides unsellable gaps</span></span><span class="val">30 min</span></div>
+          <div class="set"><span style="flex:1"><b>Instant booking</b><span>Confirm without your approval</span></span><button type="button" class="sw" aria-label="Instant booking"></button></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showPolicy }}" hint-placeholder-val="{{ false }}">
+        <div class="grp">Cancellation</div>
+        <div class="card">
+          <div class="set">
+            <span style="flex:1"><b>Free cancellation until</b><span>Before the appointment</span></span>
+            <span class="stepper"><button type="button" onClick="{{ lessH }}" aria-label="Fewer hours">−</button><b>{{ hours }} h</b><button type="button" onClick="{{ moreH }}" aria-label="More hours">+</button></span>
+          </div>
+          <div class="set">
+            <span style="flex:1"><b>Late cancel fee</b><span>Charged to the card on file</span></span>
+            <span class="stepper"><button type="button" onClick="{{ lessFee }}" aria-label="Lower fee">−</button><b>{{ fee }}%</b><button type="button" onClick="{{ moreFee }}" aria-label="Higher fee">+</button></span>
+          </div>
+          <div class="set">
+            <span style="flex:1"><b>No-show fee</b><span>Marked by you after 15 min</span></span>
+            <span class="stepper"><button type="button" onClick="{{ lessNs }}" aria-label="Lower fee">−</button><b>{{ ns }}%</b><button type="button" onClick="{{ moreNs }}" aria-label="Higher fee">+</button></span>
+          </div>
+        </div>
+        <div class="grp">Deposits</div>
+        <div class="card">
+          <div class="set"><span style="flex:1"><b>Standard deposit</b><span>Per service, set in Services</span></span><span class="val">$40</span></div>
+          <div class="set"><span style="flex:1"><b>New clients</b><span>First visit only</span></span><span class="val">50%</span></div>
+          <div class="set"><span style="flex:1"><b>Clients with a no-show</b><span>Full prepayment for 90 days</span></span><button type="button" class="sw" aria-label="Full prepayment after no-show"></button></div>
+        </div>
+        <div class="grp">What clients see</div>
+        <div class="preview">
+          <small>Shown before they confirm</small>
+          Free cancellation until {{ hours }} hours before. After that {{ fee }}% of the service is charged. No-shows are charged {{ ns }}%. A $40 deposit holds your slot and comes off the final price.
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <a href="M1-Today.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Today</a>
+    <a href="M8-Week.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Calendar</a>
+    <a href="M3-Clients.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a6 6 0 0 0-5-5.9"></path></svg>Clients</a>
+    <a href="M4-Inbox.dc.html" class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"></path></svg>Inbox</a>
+    <a href="M11-More.dc.html" class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'hours', closed: ['Mon', 'Sun'], hours: 24, fee: 50, ns: 100 }; }
+  renderVals() {
+    const { tab, closed, hours, fee, ns } = this.state;
+    const wk = [['Mon','9:00 to 18:00',''],['Tue','9:00 to 18:00','Break 13:00 to 13:30'],['Wed','9:00 to 18:00','Break 13:00 to 13:30'],['Thu','10:00 to 19:00',''],['Fri','9:00 to 19:00','Peak pricing after 16:00'],['Sat','8:00 to 18:00','Peak pricing'],['Sun','',''] ];
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    return {
+      tabs: [['hours','Hours & availability'],['policy','Cancellation & deposits']].map(([id, name]) => ({ id, name, cls: tab === id ? 'on' : '', pick: () => this.setState({ tab: id }) })),
+      showHours: tab === 'hours', showPolicy: tab === 'policy',
+      days: wk.map(([name, h, sub]) => { const off = closed.includes(name); return { name, hours: off ? 'Closed' : h, sub: off ? '' : sub, tCls: off ? 'off' : '', swCls: off ? 'off' : '',
+        toggle: () => this.setState({ closed: off ? closed.filter((d) => d !== name) : closed.concat(name) }) }; }),
+      hours, fee, ns,
+      lessH: () => this.setState({ hours: clamp(hours - 12, 0, 72) }), moreH: () => this.setState({ hours: clamp(hours + 12, 0, 72) }),
+      lessFee: () => this.setState({ fee: clamp(fee - 25, 0, 100) }), moreFee: () => this.setState({ fee: clamp(fee + 25, 0, 100) }),
+      lessNs: () => this.setState({ ns: clamp(ns - 25, 0, 100) }), moreNs: () => this.setState({ ns: clamp(ns + 25, 0, 100) })
+    };
+  }
+}
+</script>
+</body>
+</html>

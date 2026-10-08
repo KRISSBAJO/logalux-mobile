@@ -200,9 +200,9 @@ export function PlaceButton({ label, onPress, big, open }: { label: string; onPr
     return (
       <Pressable accessibilityRole="button" accessibilityLabel={`Place: ${label}. Change`} accessibilityState={{ expanded: !!open }} onPress={onPress}
         style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, alignSelf: "flex-start" }}>
-        <Icon name="pin" size={20} stroke={2.2} />
-        <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: f.serifBold, fontSize: 26, color: c.ink }}>{label}</Text>
-        <Icon name="down" size={18} stroke={2.2} />
+        <Icon name="pin" size={17} stroke={2.2} />
+        <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: f.serifBold, fontSize: 20, color: c.ink }}>{label}</Text>
+        <Icon name="down" size={16} stroke={2.2} />
       </Pressable>
     );
   }

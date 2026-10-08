@@ -56,6 +56,7 @@ Business side (`/business/*` tabs, other screens under `/m/*`). Every tool a bus
 
 - Sign-in is by email and password, and by a texted code once an admin switches that on in the console (Features). Texts, WhatsApp, the Apple Pay and Google Pay note and saved cards appear in the app only while switched on; the app reads `GET /v1/features` on every screen focus.
 - A new person sees a welcome screen once, then the client home; a business person signs in from it.
+- Where the person is comes from the API's first guess (`GET /v1/locate`, from the device's internet address), and is shown as a guess until they choose a place or press "Use my exact location". Every list is their own country, nearest first; a switch in the place panel browses the other country with a banner. On web, `localStorage.lx_dev_ip = "102.89.23.4"` tries the Lagos guess in development. Exact location on a phone needs `expo-location` (one marked line in `src/lib/ca-place.ts`); until it is added the app says so.
 - Payment happens on Stripe's or Paystack's own page, opened in the phone's browser. The app never sees a card.
 - Bank details are entered on the provider page (Stripe), or for Nigeria exactly as the web does it. Only help pages open the website.
 - Spreadsheet exports are shared as text on a phone; sharing a real file needs `expo-sharing` and `expo-file-system`.

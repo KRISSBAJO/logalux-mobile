@@ -32,6 +32,12 @@ export function stockState(p: Row, onOrder: Set<string>): { label: string; kind:
 export const meterOf = (p: Row, top: number) => Math.min(100, pct(Number(p.stock), Number(p.par_level) > 0 ? Number(p.par_level) : Number(p.reorder_at) > 0 ? Math.max(Number(p.reorder_at) * 3, 1) : Math.max(top, 1)));
 export const marginOf = (p: Row) => (sells(p) && Number(p.price_cents) > 0 ? `${pct(Number(p.price_cents) - Number(p.cost_cents), Number(p.price_cents))}%` : "Not sold");
 
+/** How an online order of a product gets to the customer. Pick-up is always offered for a business's own products. */
+export function reachOf(p: Row, cur: string): string {
+  const price = Number(p.shipping_cents) > 0 ? money(p.shipping_cents, cur) : "free";
+  return !p.shipping ? "Pick-up only" : p.pickup === false ? `Delivery only, ${price}` : `Pick-up or delivery, ${price}`;
+}
+
 /** Out of stock first, then low, then by name: what needs doing is at the top. */
 export const byUrgency = (a: Row, b: Row) => (Number(isOut(b)) - Number(isOut(a))) || (Number(isLow(b)) - Number(isLow(a))) || String(a.name).localeCompare(String(b.name));
 

@@ -2,10 +2,10 @@
 // They follow the web's Staff & rosters tool, so both say the same thing about the same person.
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef } from "react";
-import { Platform } from "react-native";
 import { API_URL, ApiError, type Row } from "./api";
-import { DAYS, DAY_SHORT, clock12, dateOnly, shareText, signedIn, type Day } from "./mc-util";
+import { DAYS, DAY_SHORT, clock12, dateOnly, signedIn, type Day } from "./mc-util";
 import { addDays, mins, mondayOf } from "./mb-util";
+import { csvText, shareFile, type FileStatus } from "./mj-files";
 import { ymd } from "./format";
 import { useSession } from "./session";
 import { useLoad } from "./use-load";
@@ -172,10 +172,10 @@ export function invitedText(out: Row, email: string, manager: boolean, change: b
 }
 
 /**
- * The payroll as a spreadsheet file (GET /payroll?format=csv). In a browser it is downloaded; on a phone the
- * rows are handed to the share sheet as text, because the app has no file storage to attach a file from.
+ * The payroll as a spreadsheet file (GET /payroll?format=csv), named payroll-<from>-to-<to>.csv. In a browser
+ * it is downloaded; on a phone the file goes to the system share sheet.
  */
-export async function exportPayroll(token: string | null, from: string, to: string): Promise<"downloaded" | "shared" | "copied" | "failed"> {
+export async function exportPayroll(token: string | null, from: string, to: string): Promise<FileStatus> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}/v1/m/payroll?format=csv&from=${from}&to=${to}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
@@ -188,18 +188,7 @@ export async function exportPayroll(token: string | null, from: string, to: stri
     try { msg = String(JSON.parse(text).error ?? msg); } catch { /* not JSON */ }
     throw new ApiError(res.status, msg[0].toUpperCase() + msg.slice(1) + (/[.!?]$/.test(msg) ? "" : "."));
   }
-  if (Platform.OS === "web") {
-    const g = globalThis as unknown as { document?: Document; URL: typeof URL; Blob: typeof Blob };
-    if (!g.document) return "failed";
-    const url = g.URL.createObjectURL(new g.Blob([text], { type: "text/csv;charset=utf-8" }));
-    const a = g.document.createElement("a");
-    a.href = url; a.download = `payroll-${from}-to-${to}.csv`;
-    g.document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => g.URL.revokeObjectURL(url), 2000);
-    return "downloaded";
-  }
-  const out = await shareText(text.replace(/^﻿/, ""));
-  return out === "shared" ? "shared" : out === "copied" ? "copied" : "failed";
+  return shareFile({ name: `payroll-${from}-to-${to}.csv`, mime: "text/csv", text: csvText(text) });
 }
 
 // ---------- periods for pay ----------

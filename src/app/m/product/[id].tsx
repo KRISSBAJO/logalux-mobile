@@ -14,7 +14,7 @@ import { Btn, Card, Empty, Note, Photo, Row, Screen, T } from "@/components/ui";
 import { media, type Row as Data } from "@/lib/api";
 import { money, plural } from "@/lib/format";
 import { DENIED, ask, orDenied, signedIn, soft } from "@/lib/mc-util";
-import { CATEGORY, KIND, REASON, isLow, isOut, marginOf, meterOf, onOrderIds, sells, shelf, stamp, stockState, trim } from "@/lib/mf-stock";
+import { CATEGORY, KIND, REASON, isLow, isOut, marginOf, meterOf, onOrderIds, reachOf, sells, shelf, stamp, stockState, trim } from "@/lib/mf-stock";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";
@@ -50,7 +50,7 @@ export default function Product() {
   const p = useMemo(() => all.find((x) => x.id === id), [all, id]);
   const suppliers = (d?.inv.suppliers ?? []) as Data[], locations = (d?.inv.locations ?? []) as Data[], services = (d?.inv.services ?? []) as Data[];
   const multi = locations.length > 1;
-  const set = (change: Partial<ProductDraft>) => setDraft((x) => ({ ...x, ...change }));
+  const set = (change: Partial<ProductDraft>) => { setDraft((x) => ({ ...x, ...change })); setFormError(""); };
 
   const title = isNew ? "New product" : "Product";
   if (!d) return <Blank title={title} error={error} onRetry={reload} denied={data === DENIED} what="Products and stock belong to a manager or the owner." />;
@@ -71,10 +71,9 @@ export default function Product() {
     };
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.cream }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <Screen footer={<Btn busy={busy === "save"} onPress={create}>Add product</Btn>}>
+        <Screen footer={<View style={{ gap: 10 }}>{formError ? <Note kind="bad">{formError}</Note> : null}<Btn busy={busy === "save"} onPress={create}>Add product</Btn></View>}>
           <Header title="New product" />
           <View style={{ marginTop: 16, gap: 14 }}>
-            {formError ? <Note kind="bad">{formError}</Note> : null}
             <ProductFields v={draft} set={set} suppliers={suppliers} cur={cur} isNew />
             <Fine>You can add a photo, ingredients and directions once the product is saved.</Fine>
           </View>
@@ -237,6 +236,7 @@ export default function Product() {
       <Grp>Selling</Grp>
       <Card>
         {sells(p) ? <Line title="Sell online" sub="In the LogaLuxe shop and on your booking page." right={<Sw on={!!p.active} disabled={busy === "online"} label={`${p.name}: sell online`} onPress={toggleOnline} />} /> : <Kv k="Sold online" sub="A back-bar product has no price and is never sold online." v="No" />}
+        {sells(p) ? <Kv k="Delivery" sub={!p.active ? "For orders from the shop, once it is sold online." : p.shipping ? "Charged once on an order." : undefined} v={reachOf(p, cur)} /> : null}
         <Kv k="Retail price" v={sells(p) ? money(p.price_cents, cur) : "Not sold"} strong />
         <Kv k="Cost" v={money(p.cost_cents, cur)} />
         <Kv k="Margin" v={marginOf(p)} />
@@ -283,8 +283,7 @@ export default function Product() {
         </>
       ) : <Empty title="No stock changes yet">Deliveries, counts, corrections and back-bar use are listed here as they happen.</Empty>}
 
-      <Sheet tall open={open === "edit"} onClose={() => setOpen("")} title="Edit product" footer={<Btn busy={busy === "save"} onPress={save}>Save</Btn>}>
-        {formError ? <Note kind="bad">{formError}</Note> : null}
+      <Sheet tall open={open === "edit"} onClose={() => setOpen("")} title="Edit product" footer={<View style={{ gap: 10 }}>{formError ? <Note kind="bad">{formError}</Note> : null}<Btn busy={busy === "save"} onPress={save}>Save</Btn></View>}>
         <ProductFields v={draft} set={set} suppliers={suppliers} cur={cur} isNew={false} inStock={Number(p.stock)} />
       </Sheet>
       <AdjustSheet open={open === "adjust"} onClose={() => setOpen("")} p={p} onDone={(m) => done(m)} locations={locations} startAt={startAt} />

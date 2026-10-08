@@ -1,10 +1,11 @@
 // Pricing rules: prices that go up or down by service, day, time, level and date, and a check of what
 // one booking would cost (the web: Services, Pricing rules). Rules come from GET /v1/m/menu; the check
 // asks GET /v1/m/price-check. Everyone on the team can read them; a manager or the owner changes them.
+// The list is in the order the rules are applied (`sort`); PUT /v1/m/price-rules/order saves a new order.
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { Choice, Header, Sheet, SmallBtn, Sw, Tabs2, Tag, Wait, mc } from "@/components/mc-kit";
-import { ClearLink, DayGrid, ListPage, Night, NightLabel, Pick, ReadOnly, Seg, SwitchCard, TimeGrid } from "@/components/mi-kit";
+import { Choice, Grp, Header, Sheet, SmallBtn, Sw, Tabs2, Tag, Wait, mc } from "@/components/mc-kit";
+import { ArrowBtn, ClearLink, DayGrid, HeadLink, ListPage, Night, NightLabel, Pick, ReadOnly, Seg, SwitchCard, TimeGrid } from "@/components/mi-kit";
 import { Btn, Card, Chip, Empty, Failed, Field, Label, Note, Row, Screen, T } from "@/components/ui";
 import { qs, type Row as Data } from "@/lib/api";
 import { firstName, money } from "@/lib/format";
@@ -41,6 +42,7 @@ export default function PricingRules() {
   const [tab, setTab] = useState<"rules" | "check">("rules");
   const [note, setNote] = useState<Flash>(null);
   const [busy, setBusy] = useState("");
+  const [sorting, setSorting] = useState(false);
   const [form, setForm] = useState<Form | null>(null), [pick, setPick] = useState(""), [formNote, setFormNote] = useState(""), [bad, setBad] = useState<{ key: string; text: string } | null>(null);
 
   // The price check
@@ -136,17 +138,37 @@ export default function PricingRules() {
     setBusy("");
   };
 
+  /** Moves a rule one place earlier or later and saves the whole order, first to last. */
+  const move = async (r: Data, up: boolean) => {
+    const list = [...rules];
+    const i = list.findIndex((x) => x.id === r.id), j = up ? i - 1 : i + 1;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    setBusy("mv"); setNote(null);
+    setData((d) => (d ? { ...d, rules: list } : d));
+    try {
+      await s.mapi("/price-rules/order", { method: "PUT", body: { ids: list.map((x) => String(x.id)) } });
+    } catch (e) {
+      setNote({ kind: "bad", text: (e as Error).message });
+      await refresh();
+    }
+    setBusy("");
+  };
+
   const svName = (id: string) => String(services.find((x) => x.id === id)?.name ?? "");
   const header = (
     <View>
       <Header title="Pricing rules" right={canEdit && tab === "rules" ? <SmallBtn kind="ink" icon="plus" onPress={() => open()}>Add</SmallBtn> : undefined} />
       <View style={{ marginTop: 14 }}>
-        <Tabs2 tabs={[["rules", `Rules · ${onCount} on`], ["check", "Price check"]]} value={tab} onChange={(k) => { setTab(k); setNote(null); }} />
+        <Tabs2 tabs={[["rules", `Rules · ${onCount} on`], ["check", "Price check"]]} value={tab} onChange={(k) => { setTab(k); setNote(null); setSorting(false); }} />
       </View>
       {note ? <View style={{ marginTop: 12 }}><Note kind={note.kind}>{note.text}</Note></View> : null}
       {!canEdit && tab === "rules" ? <ReadOnly>You can see the rules here. A manager or the owner adds and changes them.</ReadOnly> : null}
       {tab === "rules" ? (
-        <T size={13} muted style={{ marginTop: 12, marginBottom: 12 }}>A rule raises or lowers a price when it matches the service, the day, the time, the level of the person doing it and the date. A person&apos;s own price replaces the menu price first, then every rule that matches adjusts it, oldest rule first. Clients see the final price when they book.</T>
+        <>
+          <T size={13} muted style={{ marginTop: 12 }}>A rule raises or lowers a price when it matches the service, the day, the time, the level of the person doing it and the date. A person&apos;s own price replaces the menu price first. Then every rule that matches and is switched on changes it, from the top of this list down, and each one works on the price the rule above it left. So the order matters when rules overlap: 10% more then {money(500, cur)} off does not give the same price as {money(500, cur)} off then 10% more. Clients see the final price when they book.</T>
+          {rules.length ? <Grp right={canEdit && rules.length > 1 ? <HeadLink onPress={() => setSorting(!sorting)}>{sorting ? "Done" : "Reorder"}</HeadLink> : undefined}>{`Applied in this order · ${rules.length}`}</Grp> : <View style={{ height: 12 }} />}
+        </>
       ) : (
         <View style={{ marginTop: 16, gap: 14 }}>
           {!services.length || !staff.length ? <Empty title="Nothing to check yet">Add a service and a team member first.</Empty> : (
@@ -188,7 +210,7 @@ export default function PricingRules() {
     <>
       <ListPage<Data> data={tab === "rules" ? rules : []} keyOf={(r) => String(r.id)} gap={10} header={header} onRefresh={refresh} refreshing={refreshing}
         empty={tab === "rules" ? <Empty title="No pricing rules" action={canEdit ? <Btn small onPress={() => open()} style={{ marginTop: 4 }}>Add your first rule</Btn> : undefined}>{canEdit ? "Add one to charge more at busy times or less at quiet ones." : "A manager or the owner can add them."}</Empty> : undefined}
-        render={(r) => (
+        render={(r, index) => (
           <Card style={{ padding: 14, gap: 6, borderRadius: 18, opacity: r.active ? 1 : 0.75 }}>
             <Pressable accessibilityRole={canEdit ? "button" : undefined} accessibilityLabel={`${r.name}, ${changeText(r, cur)}${canEdit ? ". Edit" : ""}`} disabled={!canEdit} onPress={() => open(r)} style={{ gap: 4 }}>
               <Row between style={{ alignItems: "flex-start" }}>
@@ -199,8 +221,13 @@ export default function PricingRules() {
               <T size={12} muted>{[LEVELS.find(([k]) => k === (r.level ?? ""))?.[1] ?? "Any level", datesText(r)].join(" · ")}</T>
             </Pressable>
             <Row between style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 8, marginTop: 2 }}>
-              {canEdit ? <SmallBtn onPress={() => open(r)}>Edit</SmallBtn> : <View />}
-              {canEdit ? (
+              {sorting && canEdit ? <T size={13} weight="medium" muted>{`${index + 1} of ${rules.length}${r.active ? "" : " · off, so skipped"}`}</T> : canEdit ? <SmallBtn onPress={() => open(r)}>Edit</SmallBtn> : <View />}
+              {sorting && canEdit ? (
+                <Row gap={4}>
+                  <ArrowBtn up disabled={index === 0 || !!busy} label={`Move ${r.name} earlier`} onPress={() => move(r, true)} />
+                  <ArrowBtn disabled={index === rules.length - 1 || !!busy} label={`Move ${r.name} later`} onPress={() => move(r, false)} />
+                </Row>
+              ) : canEdit ? (
                 <Row gap={10}>
                   <T size={13} weight="medium" muted>{r.active ? "On" : "Off"}</T>
                   <Sw on={!!r.active} disabled={busy === "sw" + r.id} label={`${r.name}: switched on`} onPress={() => toggle(r)} />

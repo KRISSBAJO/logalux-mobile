@@ -33,7 +33,8 @@
           "photosPermission": "LogaLuxe opens your photos so you can add pictures of your work, your products and your documents.",
           "cameraPermission": "LogaLuxe uses the camera so you can take pictures of your work, your products and your documents."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "scheme": "logaluxe"
   }

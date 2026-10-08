@@ -5,6 +5,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AskManager, Wait, Grp, Header, McIcon, Sheet, SmallBtn, Tag, WebLink, mc, type McIconName } from "@/components/mc-kit";
+import { CsvButton, type Flash } from "@/components/mh-kit";
 import { Btn, Card, Empty, Failed, Icon, Note, Row, T } from "@/components/ui";
 import { qs, type Row as Data } from "@/lib/api";
 import { clock, dayShort, money, plural, ymd } from "@/lib/format";
@@ -55,6 +56,7 @@ export default function Money() {
   const [moreBusy, setMoreBusy] = useState(false), [moreError, setMoreError] = useState("");
   const [paying, setPaying] = useState(false), [payBusy, setPayBusy] = useState(false), [payError, setPayError] = useState("");
   const [note, setNote] = useState("");
+  const [fileNote, setFileNote] = useState<Flash>(null);
 
   const { data, error, refreshing, refresh, reload } = useLoad(signedIn(s, async () => {
     const from = addDays(ymd(new Date(), tz), -(FIRST_DAYS - 1));
@@ -236,7 +238,7 @@ export default function Money() {
         </T>
       </Card>
 
-      {cut ? <View style={{ marginTop: 12 }}><Note kind="gold">One of these periods has more lines than fit here, so its oldest ones are missing. The full ledger is on the web.</Note></View> : null}
+      {cut ? <View style={{ marginTop: 12 }}><Note kind="gold">One of these periods has more lines than fit here, so its oldest ones are missing. The export below has every line.</Note></View> : null}
       {quiet ? (
         <View style={{ marginTop: 16 }}>
           <Empty title={`No activity since ${dateOnly(since)}`}>Sales, tips, fees, refunds and payouts show here as they happen.</Empty>
@@ -251,6 +253,13 @@ export default function Money() {
       <Row between style={{ marginTop: 12 }}>
         <T size={12} muted style={{ flex: 1 }}>Showing activity since {dateOnly(since)}.</T>
         <SmallBtn kind="out" busy={moreBusy} onPress={showEarlier}>Show earlier</SmallBtn>
+      </Row>
+
+      {/* The same lines as a spreadsheet file: the web's "Export CSV" */}
+      {fileNote ? <View style={{ marginTop: 12 }}><Note kind={fileNote.kind}>{fileNote.text}</Note></View> : null}
+      <Row between style={{ marginTop: 12 }}>
+        <T size={12} muted style={{ flex: 1 }}>Every line from {dateOnly(since)} to today as a spreadsheet file.</T>
+        <CsvButton path={"/money/export" + qs({ from: since, to: today })} token={s.businessToken} name={`ledger-${since}-to-${today}.csv`} onNote={setFileNote}>Export CSV</CsvButton>
       </Row>
 
       <Grp style={{ marginTop: 22 }}>Payouts</Grp>

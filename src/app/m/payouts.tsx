@@ -5,10 +5,11 @@
 // In Nigeria the web tool itself asks for the bank and the 10-digit account number and sends them straight
 // to the API (POST /v1/m/payout-account/bank), which checks the name with the bank through Paystack and keeps
 // only the last four digits. This screen mirrors that form exactly; the number is held only while the sheet is open.
+import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
+import { AppState, Platform, Pressable, Text, View } from "react-native";
 import { AskManager, Choice, Grp, Header, McIcon, Sheet, SmallBtn, Tag, Wait } from "@/components/mc-kit";
 import { GoldBtn, Line, Night, Step, nightBody, nightLabel, small, type Flash } from "@/components/mh-kit";
 import { Btn, Card, Empty, Failed, Field, Icon, Note, Row, Screen } from "@/components/ui";
@@ -155,13 +156,18 @@ export default function Payouts() {
   const openStripe = async () => {
     setBusy("setup"); setNote(null);
     try {
-      const out = await s.mapi<Data>("/payout-account/stripe", { method: "POST", body: {} });
+      // In the installed app Stripe is asked to come back to this screen: its page then closes by itself.
+      // That needs the app's own address (logaluxe://), which a browser and Expo Go do not have.
+      const home = "logaluxe://m/payouts";
+      const comesBack = Platform.OS !== "web" && Linking.createURL("m/payouts").startsWith("logaluxe://");
+      const out = await s.mapi<Data>("/payout-account/stripe", { method: "POST", body: comesBack ? { return_to: "app" } : {} });
       const url = typeof out.url === "string" ? out.url : "";
       if (!url) { setNote({ kind: "ok", text: "Payout account added as your default. It is simulated: no bank was contacted." }); setBusy(""); reload(); return; }
       if (!isStripe(url)) { setNote({ kind: "bad", text: "Stripe returned a link this app does not trust. Try again." }); setBusy(""); return; }
       away.current = true;
       setBusy("");
-      await WebBrowser.openBrowserAsync(url).catch(() => undefined);
+      if (comesBack) await WebBrowser.openAuthSessionAsync(url, home).catch(() => undefined);
+      else await WebBrowser.openBrowserAsync(url).catch(() => undefined);
       // On a phone the line above waits until Stripe's page is closed. In a browser it returns at once,
       // and coming back to the tab is what reads the state again.
       if (AppState.currentState === "active") await backFromStripe();

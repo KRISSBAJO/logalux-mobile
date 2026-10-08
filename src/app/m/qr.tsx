@@ -1,7 +1,7 @@
 // The booking link as a QR code, large enough to scan off the screen, with the link under it to
 // copy or share, and the snippets that put a booking button on the business's own website.
 // The same link and snippets as the "Share your booking page" card of the web's Storefront tool.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Linking, Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Grp, Header, McIcon, SmallBtn, Wait } from "@/components/mc-kit";
@@ -9,9 +9,29 @@ import { MdIcon, said, useSaid } from "@/components/md-kit";
 import { Card, Note, Row, Screen, T } from "@/components/ui";
 import { WEB_URL } from "@/lib/api";
 import { copyText, isLocalAddress, shareText } from "@/lib/mc-util";
+import { shareFile } from "@/lib/mj-files";
 import { shareKit } from "@/lib/md-profile";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
+
+/** The drawn code, which can hand back its own picture as a PNG written in base64. */
+type QrSvg = { toDataURL?: (done: (base64: string) => void, options?: { width?: number; height?: number }) => void };
+// In a browser the picture can be drawn at any size, so it is made large enough to print. On a phone it is
+// the size it has on the screen, at the screen's own sharpness.
+const PNG_OPTIONS = Platform.OS === "web" ? { width: 1024, height: 1024 } : undefined;
+
+/** The code as a PNG in base64, or null when the picture could not be made. */
+function pngOf(svg: QrSvg | null): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!svg?.toDataURL) { resolve(null); return; }
+    const giveUp = setTimeout(() => resolve(null), 5000);
+    try {
+      svg.toDataURL((data) => { clearTimeout(giveUp); resolve(data ? String(data).replace(/^data:image\/png;base64,/, "").replace(/\s+/g, "") : null); }, PNG_OPTIONS);
+    } catch {
+      clearTimeout(giveUp); resolve(null);
+    }
+  });
+}
 
 const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "ui-monospace, Menlo, Consolas, monospace" });
 
@@ -29,6 +49,8 @@ export default function BookingQr() {
   const { width } = useWindowDimensions();
   const [note, setNote] = useSaid();
   const [qrFailed, setQrFailed] = useState(false);
+  const qr = useRef<QrSvg | null>(null);
+  const [saving, setSaving] = useState(false);
   if (!m) return <Screen><Header title="QR code and link" /><Wait /></Screen>;
 
   const kit = shareKit(WEB_URL, String(m.slug), String(m.business ?? ""));
@@ -45,6 +67,19 @@ export default function BookingQr() {
     if (out === "copied") setNote({ kind: "ok", text: "This browser has no share sheet, so the link was copied instead." });
   };
 
+  const web = Platform.OS === "web";
+  const saveCode = async () => {
+    setSaving(true); setNote(null);
+    const name = `${m.slug}-booking-qr.png`;
+    const png = await pngOf(qr.current);
+    const out = png ? await shareFile({ name, mime: "image/png", base64: png }) : "failed";
+    setNote(out === "saved" ? { kind: "ok", text: `Saved ${name}.` }
+      : out === "shared" ? null
+      : out === "unavailable" ? { kind: "gold", text: "This device cannot share files. Take a screenshot of the code instead." }
+      : { kind: "bad", text: "The picture of the code could not be made. Take a screenshot of the code instead." });
+    setSaving(false);
+  };
+
   return (
     <Screen footer={said(note)}>
       <Header title="QR code and link" />
@@ -56,9 +91,11 @@ export default function BookingQr() {
         <Text accessibilityRole="header" style={{ fontFamily: f.serifBold, fontSize: 22, lineHeight: 26, color: c.ink, textAlign: "center" }}>{m.business}</Text>
         <View accessible accessibilityRole="image" accessibilityLabel={`QR code that opens ${kit.link}`} style={{ backgroundColor: c.white }}>
           {qrFailed ? <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}><T muted center>The QR code could not be drawn. Use the link below.</T></View>
-            : <QRCode value={kit.link} size={size} color={c.ink} backgroundColor={c.white} quietZone={8} ecl="M" onError={() => setQrFailed(true)} />}
+            : <QRCode value={kit.link} size={size} color={c.ink} backgroundColor={c.white} quietZone={8} ecl="M" onError={() => setQrFailed(true)} getRef={(r) => { qr.current = r as QrSvg | null; }} />}
         </View>
         <T size={13} muted center>Clients point their phone camera at this and your booking page opens.</T>
+        {qrFailed ? null : <SmallBtn kind="out" icon="share" busy={saving} onPress={saveCode} style={{ alignSelf: "stretch" }}>{web ? "Save the code" : "Save or share the code"}</SmallBtn>}
+        {qrFailed ? null : <T size={12} muted center>{web ? "Downloads the code as a picture you can print or post." : "Sends the code as a picture you can save, print or post."}</T>}
       </Card>
 
       <Row gap={8} style={{ backgroundColor: "#F4ECE2", borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, marginTop: 12 }}>

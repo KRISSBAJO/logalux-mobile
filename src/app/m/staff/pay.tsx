@@ -49,7 +49,7 @@ export default function Pay() {
     setExporting(true); setNote(null);
     try {
       const out = await exportPayroll(s.businessToken, String(data.from), String(data.to));
-      setNote(out === "downloaded" ? { kind: "ok", text: "The payroll file was downloaded." } : out === "copied" ? { kind: "ok", text: "The payroll rows were copied. Paste them into a spreadsheet." } : out === "shared" ? null : { kind: "bad", text: "The payroll was not shared." });
+      setNote(out === "saved" ? { kind: "ok", text: `Saved payroll-${data.from}-to-${data.to}.csv.` } : out === "shared" ? null : out === "unavailable" ? { kind: "bad", text: "This device cannot share files. Download the payroll from the web app on a computer." } : { kind: "bad", text: "The payroll file could not be handed over. Try again." });
     } catch (e) {
       setNote({ kind: "bad", text: (e as Error).message });
     }

@@ -1,5 +1,6 @@
 // Promo codes: the business's own codes, how often each was used and what it gave away and brought in.
-// GET /v1/m/promos lists them; POST adds one; PUT switches one on or off (the only change the API allows); DELETE removes an unused one.
+// GET /v1/m/promos lists them; POST adds one; PUT switches one on or off or changes it; DELETE removes an unused one.
+// The code itself never changes, and the API lets the discount change only while nobody has used the code.
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,14 +10,14 @@ import { Btn, Card, Chip, Empty, Field, Label, Note, Row, T } from "@/components
 import { type Row as Data } from "@/lib/api";
 import { money, plural, ymd } from "@/lib/format";
 import { dateMed } from "@/lib/mb-util";
-import { ask, copyText, symbol, toCents, toInt } from "@/lib/mc-util";
+import { ask, copyText, major, symbol, toCents, toInt } from "@/lib/mc-util";
 import { useGrow } from "@/lib/mg-load";
 import { PROMO_TONE, promoState, promoWhat, type PromoState } from "@/lib/mg-util";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 
-type Form = { code: string; description: string; kind: "percent" | "fixed"; value: string; min: string; maxUses: string; startsAt: string; endsAt: string };
-const BLANK: Form = { code: "", description: "", kind: "percent", value: "", min: "", maxUses: "", startsAt: "", endsAt: "" };
+type Form = { id: string; used: number; code: string; description: string; kind: "percent" | "fixed"; value: string; min: string; maxUses: string; startsAt: string; endsAt: string };
+const BLANK: Form = { id: "", used: 0, code: "", description: "", kind: "percent", value: "", min: "", maxUses: "", startsAt: "", endsAt: "" };
 
 const usesOf = (p: Data) => (p.max_uses !== null && p.max_uses !== undefined ? `${p.used} of ${p.max_uses}` : `${p.used}`);
 const datesOf = (p: Data, tz?: string) => (p.starts_at || p.ends_at ? `${p.starts_at ? dateMed(p.starts_at, tz) : "Now"} to ${p.ends_at ? dateMed(p.ends_at, tz) : "no end"}` : "Always");
@@ -75,13 +76,15 @@ export default function Promos() {
     setNote(out === "failed" ? { kind: "bad", text: "The share line could not be copied." } : { kind: "ok", text: `Copied: "Use code ${p.code} at ${link}"` });
   };
 
-  const set = (change: Partial<Form>) => setForm((x) => (x ? { ...x, ...change } : x));
+  const dayOf = (v: unknown) => (v ? ymd(new Date(String(v)), tz) : "");
+  const set = (change: Partial<Form>) => { setForm((x) => (x ? { ...x, ...change } : x)); setFormError(""); };
   const save = async () => {
     if (!form) return;
     const code = form.code.trim().toUpperCase();
-    if (!/^[A-Z0-9]{4,20}$/.test(code)) { setFormError("A code is 4 to 20 letters and numbers, with no spaces."); return; }
+    const locked = !!form.id && usedNow > 0;
+    if (!form.id && !/^[A-Z0-9]{4,20}$/.test(code)) { setFormError("A code is 4 to 20 letters and numbers, with no spaces."); return; }
     const value = form.kind === "fixed" ? toCents(form.value) : toInt(form.value);
-    if (value === null || value <= 0 || (form.kind === "percent" && value > 100)) { setFormError(form.kind === "percent" ? "Enter the percent off as a whole number from 1 to 100." : "Enter the amount off, like 5 or 7.50."); return; }
+    if (!locked && (value === null || value <= 0 || (form.kind === "percent" && value > 100))) { setFormError(form.kind === "percent" ? "Enter the percent off as a whole number from 1 to 100." : "Enter the amount off, like 5 or 7.50."); return; }
     const min = toCents(form.min);
     if (min === null) { setFormError("Enter the minimum spend as an amount, or leave it empty for none."); return; }
     const uses = form.maxUses.trim() ? toInt(form.maxUses) : null;
@@ -89,15 +92,46 @@ export default function Promos() {
     if (form.startsAt && form.endsAt && form.endsAt < form.startsAt) { setFormError("The last day is before the first day."); return; }
     setSaving(true); setFormError("");
     try {
+      if (form.id) {
+        // Only what can change is sent: a date goes only when it moved, and the discount only while the code is unused.
+        const was = promos.find((p) => p.id === form.id);
+        const body: Data = { description: form.description.trim(), min_cents: min };
+        if (uses !== null) body.max_uses = uses;
+        else if (was?.max_uses !== null && was?.max_uses !== undefined) body.no_limit = true;
+        if (form.startsAt !== dayOf(was?.starts_at)) body.starts_at = form.startsAt;
+        if (form.endsAt !== dayOf(was?.ends_at)) body.ends_at = form.endsAt;
+        if (!locked) { body.kind = form.kind; body.value = value; }
+        await s.mapi(`/promos/${form.id}`, { method: "PUT", body });
+        setForm(null);
+        setNote({ kind: "ok", text: `${code} saved. The changes apply from now on.` });
+        await refresh();
+        setOpenId(form.id);
+        setSaving(false);
+        return;
+      }
       await s.mapi("/promos", { body: { code, description: form.description.trim(), kind: form.kind, value, min_cents: min, max_uses: uses, starts_at: form.startsAt, ends_at: form.endsAt } });
       setForm(null); setShow("all");
       setNote({ kind: "ok", text: `Code ${code} is ready. It works on your booking page and at Checkout.` });
       await refresh();
-    } catch (e) { setFormError((e as Error).message); }
+    } catch (e) {
+      setFormError((e as Error).message);
+      if (form.id) void refresh(); // a refusal may mean the code was used meanwhile: the form then locks its discount
+    }
     setSaving(false);
   };
 
   const add = () => { setFormError(""); setForm({ ...BLANK }); };
+  const edit = (p: Data) => {
+    setFormError(""); setOpenId("");
+    setForm({
+      id: String(p.id), used: Number(p.used ?? 0), code: String(p.code), description: String(p.description ?? ""), kind: p.kind === "fixed" ? "fixed" : "percent",
+      value: p.kind === "fixed" ? major(Number(p.value)) : String(p.value), min: Number(p.min_cents) > 0 ? major(Number(p.min_cents)) : "",
+      maxUses: p.max_uses !== null && p.max_uses !== undefined ? String(p.max_uses) : "", startsAt: dayOf(p.starts_at), endsAt: dayOf(p.ends_at),
+    });
+  };
+  const editing = !!form?.id, live = editing ? promos.find((p) => p.id === form?.id) : undefined;
+  const usedNow = Number(live?.used ?? form?.used ?? 0), locked = editing && usedNow > 0;
+  const fixedField = { backgroundColor: c.cream2, color: c.muted };
 
   const header = (
     <View>
@@ -127,7 +161,7 @@ export default function Promos() {
         contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: pad, paddingBottom: Math.max(insets.bottom, 14) + 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.wine} />}
         ListHeaderComponent={header}
-        ListFooterComponent={promos.length ? <T size={12} muted style={{ marginTop: 4 }}>A code cannot be changed once it is made: switch it off and make a new one. A code that has been used cannot be deleted, so its record stays.</T> : null}
+        ListFooterComponent={promos.length ? <T size={12} muted style={{ marginTop: 4 }}>Open a code to change it. The code itself never changes, and its discount can change only until someone has used it. A code that has been used cannot be deleted, so its record stays.</T> : null}
         renderItem={({ item: p }) => {
           const st = promoState(p);
           return (
@@ -175,6 +209,7 @@ export default function Promos() {
                 <Sw on={!!sel.active} disabled={busyId === sel.id} label={`${sel.code}: ${sel.active ? "on, switch off" : "off, switch on"}`} onPress={() => toggle(sel)} />
               </Row>
             </Card>
+            <Btn kind="out" onPress={() => edit(sel)}>Edit</Btn>
             <Btn kind="out" onPress={() => copy(sel)}>Copy share line</Btn>
             <T size={12} muted>The share line reads &quot;Use code {sel.code} at {link}&quot;.</T>
             {Number(sel.used) === 0
@@ -184,32 +219,42 @@ export default function Promos() {
         ) : null}
       </Sheet>
 
-      <Sheet tall open={!!form} onClose={() => setForm(null)} title="New promo code" sub={`Works on your booking page and at Checkout, for ${business} only.`}
-        footer={<Btn busy={saving} onPress={save}>Create code</Btn>}>
+      <Sheet tall open={!!form} onClose={() => setForm(null)} title={editing ? `Edit ${form?.code ?? ""}` : "New promo code"} sub={editing ? "Changes apply to bookings and sales made from now on." : `Works on your booking page and at Checkout, for ${business} only.`}
+        footer={<View style={{ gap: 10 }}>{formError ? <Note kind="bad">{formError}</Note> : null}<Btn busy={saving} onPress={save}>{editing ? "Save changes" : "Create code"}</Btn></View>}>
         {form ? (
           <>
-            {formError ? <Note kind="bad">{formError}</Note> : null}
-            <Field label="Code · 4 to 20 letters and numbers" value={form.code} onChangeText={(t) => set({ code: t.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20) })} autoCapitalize="characters" autoCorrect={false} spellCheck={false} placeholder="WELCOME10" />
+            {editing
+              ? <Field label="Code" value={form.code} editable={false} style={fixedField} hint="The code itself never changes." />
+              : <Field label="Code · 4 to 20 letters and numbers" value={form.code} onChangeText={(t) => set({ code: t.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20) })} autoCapitalize="characters" autoCorrect={false} spellCheck={false} placeholder="WELCOME10" />}
             <Field label="Note · only you see it" value={form.description} onChangeText={(description) => set({ description })} maxLength={120} placeholder="For first-time clients from Instagram" />
-            <View style={{ gap: 8 }}>
-              <Label>Kind of discount</Label>
-              <Row gap={8} wrap>
-                <Chip on={form.kind === "percent"} onPress={() => set({ kind: "percent", value: "" })}>A percentage off</Chip>
-                <Chip on={form.kind === "fixed"} onPress={() => set({ kind: "fixed", value: "" })}>A fixed amount off</Chip>
-              </Row>
-            </View>
-            <Row gap={10} style={{ alignItems: "flex-start" }}>
-              <View style={{ flex: 1 }}>
-                {form.kind === "percent"
-                  ? <Field label="Percent off" value={form.value} onChangeText={(value) => set({ value })} keyboardType="number-pad" placeholder="10" />
-                  : <Field label={`Amount off (${symbol(cur)})`} value={form.value} onChangeText={(value) => set({ value })} keyboardType="decimal-pad" placeholder="5" />}
+            {locked ? (
+              <Field label="Discount" value={live ? promoWhat(live, cur) : ""} editable={false} style={fixedField}
+                hint={`Used ${plural(usedNow, "time")}, so the discount stays as it is. For a different discount, switch this code off and make a new one.`} />
+            ) : (
+              <View style={{ gap: 8 }}>
+                <Label>Kind of discount</Label>
+                <Row gap={8} wrap>
+                  <Chip on={form.kind === "percent"} onPress={() => { if (form.kind !== "percent") set({ kind: "percent", value: "" }); }}>A percentage off</Chip>
+                  <Chip on={form.kind === "fixed"} onPress={() => { if (form.kind !== "fixed") set({ kind: "fixed", value: "" }); }}>A fixed amount off</Chip>
+                </Row>
+                {editing ? <T size={13} muted>Nobody has used this code yet, so its discount can still change.</T> : null}
               </View>
+            )}
+            <Row gap={10} style={{ alignItems: "flex-start" }}>
+              {locked ? null : (
+                <View style={{ flex: 1 }}>
+                  {form.kind === "percent"
+                    ? <Field label="Percent off" value={form.value} onChangeText={(value) => set({ value })} keyboardType="number-pad" placeholder="10" />
+                    : <Field label={`Amount off (${symbol(cur)})`} value={form.value} onChangeText={(value) => set({ value })} keyboardType="decimal-pad" placeholder="5" />}
+                </View>
+              )}
               <View style={{ flex: 1 }}><Field label={`Minimum spend (${symbol(cur)})`} value={form.min} onChangeText={(min) => set({ min })} keyboardType="decimal-pad" placeholder="None" /></View>
             </Row>
-            <Field label="Most times it can be used" value={form.maxUses} onChangeText={(maxUses) => set({ maxUses })} keyboardType="number-pad" placeholder="No limit" />
+            <Field label="Most times it can be used" value={form.maxUses} onChangeText={(maxUses) => set({ maxUses })} keyboardType="number-pad" placeholder="No limit"
+              hint={editing ? `Used ${plural(usedNow, "time")} so far. Leave it empty for no limit.` : undefined} />
             <DayField label="First day" value={form.startsAt} onChange={(startsAt) => set({ startsAt })} empty="Starts now" today={today} />
             <DayField label="Last day" value={form.endsAt} onChange={(endsAt) => set({ endsAt })} empty="Never ends" today={today} min={form.startsAt || undefined} />
-            <Tip>A code cannot be changed once it is made. If something is wrong, switch it off and make a new one.</Tip>
+            {editing ? null : <Tip>You can change a code later, apart from the code itself. Its discount can change only until someone uses it.</Tip>}
           </>
         ) : null}
       </Sheet>

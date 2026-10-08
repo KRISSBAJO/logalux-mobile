@@ -249,7 +249,7 @@ export function Heat({ days, bands, count, max, bandName, say }: { days: string[
 
 /**
  * Fetches a CSV from the API with the business's token and hands it over: saved as a file in a browser,
- * sent to the share sheet as text on a phone.
+ * passed to the share sheet as a file on a phone.
  */
 export function CsvButton({ children, path, token, name, onNote, kind = "out", style }: { children?: ReactNode; path: string; token: string | null; name: string; onNote: (n: Flash) => void; kind?: "out" | "ink"; style?: StyleProp<ViewStyle> }) {
   const [busy, setBusy] = useState(false);
@@ -262,8 +262,8 @@ export function CsvButton({ children, path, token, name, onNote, kind = "out", s
       if (rows === 0) { onNote({ kind: "gold", text: "There is nothing in this period to put in a file yet." }); setBusy(false); return; }
       const out = await handCsv(csv);
       onNote(out === "saved" ? { kind: "ok", text: `Saved ${csv.name}, with ${plural(rows, "row")}.` }
-        : out === "shared" ? { kind: "ok", text: `Shared ${plural(rows, "row")} as text. Paste or save it as ${csv.name} to open it in a spreadsheet.` }
-        : out === "too-big" ? { kind: "gold", text: `This file has ${plural(rows, "row")}, too many to hand to another app from the phone. Download it from the web app on a computer.` }
+        : out === "shared" ? null
+        : out === "unavailable" ? { kind: "gold", text: `This device cannot share files, so ${csv.name} could not be handed over. Download it from the web app on a computer.` }
         : out === "failed" ? { kind: "bad", text: "The file could not be handed over. Try again." } : null);
     } catch (e) {
       onNote({ kind: "bad", text: (e as Error).message });

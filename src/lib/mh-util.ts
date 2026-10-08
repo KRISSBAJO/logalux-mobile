@@ -1,8 +1,8 @@
 // Helpers for the numbers and money-account screens (Reports, Statements, Payouts, Plan).
 // The wording and the sums follow the web's Reports, Money and Settings pages, so both say the same thing.
-import { Platform, Share } from "react-native";
 import { API_URL, type Row } from "./api";
 import { dayShort } from "./format";
+import { csvText, shareFile, type FileStatus } from "./mj-files";
 
 // ---------- money and numbers ----------
 
@@ -118,33 +118,8 @@ export async function getCsv(path: string, token: string | null, fallbackName: s
 /** How many data rows a CSV has (its first line is the column names). */
 export const csvRows = (text: string) => Math.max(0, text.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim() !== "").length - 1);
 
-// The share sheet is handed the rows as text. Past this size a phone can refuse it, so the app says so instead.
-const SHARE_LIMIT = 250_000;
-
 /**
- * Hands a CSV to the person. In a browser it is saved as a file. On a phone the app has no file-sharing
- * module, so the rows go to the system share sheet as text (Mail, Notes, Files and Sheets all take it).
+ * Hands a CSV to the person as a real file: downloaded in a browser, and on a phone written to the app's
+ * cache and passed to the system share sheet (Save to Files, Mail, Sheets, Drive and so on).
  */
-export async function handCsv(csv: Csv): Promise<"saved" | "shared" | "closed" | "too-big" | "failed"> {
-  if (Platform.OS === "web") {
-    try {
-      const g = globalThis as unknown as { document: Row; URL: { createObjectURL: (b: Blob) => string; revokeObjectURL: (u: string) => void } };
-      const url = g.URL.createObjectURL(new Blob([csv.text], { type: "text/csv;charset=utf-8" }));
-      const a = g.document.createElement("a");
-      a.href = url; a.download = csv.name; a.style.display = "none";
-      g.document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => g.URL.revokeObjectURL(url), 2000);
-      return "saved";
-    } catch {
-      return "failed";
-    }
-  }
-  const body = csv.text.replace(/^﻿/, "");
-  if (body.length > SHARE_LIMIT) return "too-big";
-  try {
-    const out = await Share.share({ title: csv.name, message: body }, { subject: csv.name, dialogTitle: csv.name });
-    return out.action === Share.dismissedAction ? "closed" : "shared";
-  } catch {
-    return "failed";
-  }
-}
+export const handCsv = (csv: Csv): Promise<FileStatus> => shareFile({ name: csv.name, mime: "text/csv", text: csvText(csv.text) });

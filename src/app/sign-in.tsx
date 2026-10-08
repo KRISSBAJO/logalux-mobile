@@ -3,7 +3,7 @@
 // switched on, with a 6-digit code sent to their phone: the three steps of the design (number, code,
 // name). A business always signs in with its password and, if it has one, its two-step code.
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { CodeBoxes, CodeLink, mmss, notSent, useWait } from "@/components/mp-code";
 import { Btn, Chip, Field, Icon, Loading, Note, Pill, Row, Screen, Serif, T } from "@/components/ui";
@@ -22,6 +22,7 @@ export default function SignIn() {
   const s = useSession();
   const ft = useFeatures();
   const [side, setSide] = useState<Side>(p.side === "business" ? "business" : "client");
+  useEffect(() => { setSide(p.side === "business" ? "business" : "client"); }, [p.side]);
   const [creating, setCreating] = useState(!!p.ref);
   const [email, setEmail] = useState(""), [password, setPassword] = useState(""), [code, setCode] = useState("");
   const [first, setFirst] = useState(""), [last, setLast] = useState(""), [phone, setPhone] = useState("");
@@ -146,12 +147,7 @@ export default function SignIn() {
           ) : <T muted>{sub}</T>}
         </View>
 
-        {inFlow ? null : (
-          <Row gap={8} style={{ marginTop: 22 }}>
-            <Chip on={side === "client"} onPress={() => { setSide("client"); setNeedCode(false); setError(""); }}>I am booking</Chip>
-            <Chip on={side === "business"} onPress={() => { setSide("business"); setCreating(false); setError(""); }}>I run a business</Chip>
-          </Row>
-        )}
+        <View style={{ height: 22 }} />
 
         {side === "client" && !ft.loaded ? <Loading label="Loading the ways to sign in" /> : byCode ? (
           <View style={{ marginTop: 22, gap: 16 }}>
@@ -250,10 +246,16 @@ export default function SignIn() {
               <T center weight="semi" color={c.wine} size={14}>Forgot your password?</T>
             </Pressable>
             {side === "client" ? <Btn kind="soft" onPress={() => router.replace("/client/home")}>Look around first</Btn> : null}
-          </View>
+      </View>
         )}
 
-        <T muted size={12} center style={{ marginTop: 24 }}>By continuing you agree to the LogaLuxe terms and privacy policy.</T>
+        {inFlow ? null : (
+          <Pressable accessibilityRole="link" hitSlop={8} style={{ minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 6 }}
+            onPress={() => { setNeedCode(false); setCreating(false); setError(""); router.setParams({ side: side === "business" ? "client" : "business" }); }}>
+            <T muted size={13}>{side === "business" ? "Here to book an appointment? " : "Run a beauty business? "}<T size={13} weight="semi" color={c.wine}>{side === "business" ? "Client sign-in" : "Business sign-in"}</T></T>
+          </Pressable>
+        )}
+        <T muted size={12} center style={{ marginTop: 10 }}>By continuing you agree to the LogaLuxe terms and privacy policy.</T>
       </Screen>
     </KeyboardAvoidingView>
   );

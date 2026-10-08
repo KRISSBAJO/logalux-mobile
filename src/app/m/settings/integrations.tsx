@@ -6,11 +6,11 @@ import { Gate, Page, backTo } from "@/components/mi-kit";
 import { Card, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { DENIED, orDenied, signedIn, soft } from "@/lib/mc-util";
+import { useModes } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { useLoad } from "@/lib/use-load";
 
 const LATER: [string, string][] = [
-  ["WhatsApp Business and SMS", "Messages on these channels are logged, not delivered"],
   ["Google Business Profile", "A book button on your Google listing"],
   ["Instagram and Facebook", "A book button on your profile. For now, put your booking link in your bio."],
   ["Card readers", "Taking a card in person on a reader"],
@@ -21,6 +21,7 @@ const back = backTo("/m/settings");
 export default function Integrations() {
   const s = useSession();
   const owner = s.merchant?.role === "owner";
+  const modes = useModes();
   const { data, error, reload, refresh, refreshing } = useLoad(signedIn(s, () => orDenied(async () => {
     const [settings, pay] = await Promise.all([s.mapi<Data>("/settings"), soft(() => s.mapi<Data>("/payments"))]);
     return { settings, pay: pay.data };
@@ -37,6 +38,8 @@ export default function Integrations() {
       <Grp>Built in</Grp>
       <Card>
         <SetRow title="Email" sub={logged ? "Not connected on this server. Emails to clients and alerts to you are logged, not delivered." : "Emails to clients and alerts to you are delivered."} right={<Tag kind={logged ? "grey" : "ok"}>{logged ? "Logged only" : "Connected"}</Tag>} />
+        <SetRow title="WhatsApp" sub={modes.whatsapp === "live" ? "Messages to clients on WhatsApp are sent." : "Not connected yet. Messages on this channel are logged, not delivered."} right={<Tag kind={modes.whatsapp === "live" ? "ok" : "grey"}>{modes.whatsapp === "live" ? "Connected" : "Logged only"}</Tag>} />
+        <SetRow title="SMS" sub={modes.sms === "live" ? "Texts to clients are sent." : "Not connected yet. Texts are logged, not delivered."} right={<Tag kind={modes.sms === "live" ? "ok" : "grey"}>{modes.sms === "live" ? "Connected" : "Logged only"}</Tag>} />
         {pay ? (
           pay.mode === "live"
             ? <SetRow title="Online payments" sub={`On through ${provider}: deposits and pay links are taken for real.`} right={<Tag kind="ok">Live</Tag>} />

@@ -1,10 +1,14 @@
 // The client's own details and password (opened from Account: "Edit" and the settings button).
+// While an admin has them switched on: confirming the mobile number with a code, and choosing how to
+// hear about bookings. Each is hidden entirely while it is off.
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, View } from "react-native";
-import { BackTitle, Grp } from "@/components/cc-ui";
+import { BackTitle, Choice, Grp } from "@/components/cc-ui";
+import { PhoneConfirm } from "@/components/mp-code";
 import { Btn, Card, Field, Note, Row, Screen, T } from "@/components/ui";
 import { WEB_URL } from "@/lib/api";
+import { useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c } from "@/lib/theme";
 
@@ -13,6 +17,8 @@ type Said = { kind: "ok" | "bad"; text: string } | null;
 export default function Details() {
   const s = useSession();
   const u = s.customer;
+  const ft = useFeatures();
+  const [hearBusy, setHearBusy] = useState(""), [hearSaid, setHearSaid] = useState<Said>(null);
   const [first, setFirst] = useState(""), [last, setLast] = useState(""), [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false), [said, setSaid] = useState<Said>(null);
   const [current, setCurrent] = useState(""), [next, setNext] = useState(""), [again, setAgain] = useState("");
@@ -52,6 +58,25 @@ export default function Details() {
     setSaving(false);
   };
 
+  // How they hear about bookings. Email always goes; a phone channel is offered only while it is live.
+  // An account made with a texted code may have no email at all: then the phone is the only place a message can go.
+  const hasEmail = !!u.email;
+  const ways: [string, string][] = [["email", hasEmail ? "Email only" : "Nothing on my phone"], ...(ft.sms_messages ? [["sms", hasEmail ? "Email and a text" : "A text"] as [string, string]] : []), ...(ft.whatsapp ? [["whatsapp", hasEmail ? "Email and WhatsApp" : "WhatsApp"] as [string, string]] : [])];
+  const prefers = String(u.preferred_channel ?? "");
+  const hears = ways.some(([k]) => k === prefers) ? prefers : "email";
+  const hear = async (channel: string) => {
+    if (channel === hears && channel === prefers) return;
+    setHearBusy(channel); setHearSaid(null);
+    try {
+      await s.capi("/auth/channel", { method: "PUT", body: { channel } });
+      await s.refresh();
+      setHearSaid({ kind: "ok", text: channel === "email" ? (hasEmail ? "Saved. Booking confirmations come by email." : "Saved.") : `Saved. Booking confirmations come ${hasEmail ? "by email and " : ""}${channel === "sms" ? "by text" : "on WhatsApp"}.` });
+    } catch (e) {
+      setHearSaid({ kind: "bad", text: (e as Error).message });
+    }
+    setHearBusy("");
+  };
+
   const change = async () => {
     setPwSaid(null);
     if (!current) { setPwSaid({ kind: "bad", text: "Enter your current password." }); return; }
@@ -79,8 +104,9 @@ export default function Details() {
             <View style={{ flex: 1 }}><Field label="First name" value={first} onChangeText={setFirst} maxLength={60} autoComplete="given-name" textContentType="givenName" /></View>
             <View style={{ flex: 1 }}><Field label="Last name" value={last} onChangeText={setLast} maxLength={60} autoComplete="family-name" textContentType="familyName" /></View>
           </Row>
-          <Field label="Email" value={String(u.email ?? "")} editable={false} style={{ backgroundColor: c.cream2, color: c.muted }} hint="To change your email, write to us from the help page." />
+          <Field label="Email" value={String(u.email ?? "")} editable={false} style={{ backgroundColor: c.cream2, color: c.muted }} hint={u.email ? "To change your email, write to us from the help page." : "This account signs in with a code sent to your phone and has no email. To add one, write to us from the help page."} />
           <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 615 555 0100" hint="With the country code. A business uses it to reach you about a booking." />
+          {ft.sms_login ? <PhoneConfirm saved={String(u.phone ?? "")} typed={phone} confirmed={u.phone_verified === true} whatsapp={ft.whatsapp} /> : null}
           {said ? <Note kind={said.kind}>{said.text}</Note> : null}
           <Btn onPress={save} busy={saving}>Save details</Btn>
           <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(`${WEB_URL}/help`)} style={{ minHeight: 44, justifyContent: "center" }}>
@@ -88,8 +114,20 @@ export default function Details() {
           </Pressable>
         </View>
 
-        <Grp>Password</Grp>
-        <View style={{ gap: 14 }}>
+        {ways.length > 1 ? (
+          <>
+            <Grp>How to hear about bookings</Grp>
+            <View accessibilityRole="radiogroup" style={{ gap: 8, opacity: hearBusy ? 0.6 : 1 }}>
+              {ways.map(([k, label]) => <Choice key={k} on={hears === k} onPress={() => { if (!hearBusy) void hear(k); }}>{label}</Choice>)}
+              <T size={13} muted>{!hasEmail ? `This account has no email address, so a booking confirmation can only reach you on your phone${u.phone ? `, ${u.phone}` : ""}.` : u.phone ? `A booking confirmation always comes by email. With a phone choice it also goes to ${u.phone}.` : "A booking confirmation always comes by email. Add a mobile number above to get it on your phone as well."}</T>
+              {hearSaid ? <Note kind={hearSaid.kind}>{hearSaid.text}</Note> : null}
+            </View>
+          </>
+        ) : null}
+
+        {/* An account with no email has no password: it signs in with a code. */}
+        <Grp style={u.email ? undefined : { display: "none" }}>Password</Grp>
+        <View style={{ gap: 14, display: u.email ? "flex" : "none" }}>
           <Field label="Current password" value={current} onChangeText={setCurrent} secureTextEntry autoCapitalize="none" autoComplete="current-password" textContentType="password" />
           <Field label="New password" value={next} onChangeText={setNext} secureTextEntry autoCapitalize="none" autoComplete="new-password" textContentType="newPassword" hint="At least 8 characters." />
           <Field label="New password again" value={again} onChangeText={setAgain} secureTextEntry autoCapitalize="none" autoComplete="new-password" textContentType="newPassword" />

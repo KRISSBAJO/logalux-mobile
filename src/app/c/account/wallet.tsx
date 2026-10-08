@@ -1,13 +1,16 @@
 // Wallet (opened from Account): store credit, and the packages, memberships and points the client holds
-// at each business. The invitation card shows only while LogaLuxe has the programme switched on.
+// at each business. The invitation card shows only while LogaLuxe has the programme switched on, and
+// "Saved cards" only while an admin has saved cards switched on.
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, Share, Text, View } from "react-native";
 import { BackTitle, Grp } from "@/components/cc-ui";
+import { CardList } from "@/components/mp-pay";
 import { Avatar, Btn, Card, Empty, Failed, Loading, Note, Pill, Row, Screen, T } from "@/components/ui";
 import type { Row as Data } from "@/lib/api";
 import { useRefocus } from "@/lib/cc-data";
 import { money, plural } from "@/lib/format";
+import { useCards } from "@/lib/mp-cards";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
@@ -23,6 +26,7 @@ const dateOnly = (v: unknown) => day(String(v).slice(0, 10) + "T12:00:00Z");
 export default function Wallet() {
   const s = useSession();
   const [shared, setShared] = useState("");
+  const kept = useCards();
 
   const q = useLoad(async () => {
     if (!s.clientToken) return null;
@@ -63,7 +67,7 @@ export default function Wallet() {
   };
 
   return (
-    <Screen onRefresh={q.refresh} refreshing={q.refreshing}>
+    <Screen onRefresh={() => { q.refresh(); void kept.reload(); }} refreshing={q.refreshing}>
       <BackTitle title="Wallet" />
 
       {showCredit ? (
@@ -109,6 +113,13 @@ export default function Wallet() {
               <T size={13} muted>{referral.friends_joined > 0 ? `${plural(referral.friends_joined, "friend has", "friends have")} joined · ${referral.friends_paid} ${referral.friends_paid === 1 ? "has" : "have"} made a first purchase` : "No friends have joined with your link yet."}</T>
             </View>
           </Card>
+        </>
+      ) : null}
+
+      {kept.on ? (
+        <>
+          <Grp>Saved cards</Grp>
+          <CardList cards={kept.cards} onChanged={() => void kept.reload()} />
         </>
       ) : null}
 

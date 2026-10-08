@@ -1,16 +1,20 @@
 // Step two of booking: check it, say who is coming, answer the business's questions, confirm (design: C5-Confirm).
-// The design draws saved cards and a choice of reminders. Cards are never typed into the app (the deposit is
-// paid on the provider's own page) and reminders are not something a client can choose today, so the first is
-// one honest line in the same box and the second is left out.
+// "Pay with" follows the design: a signed-in client's kept cards, or a different card, while saved cards are
+// switched on; otherwise one honest line. A card is never typed into the app: a kept card is charged by the
+// provider, any other is typed on the provider's own page, where Apple Pay and Google Pay also are.
+// The design's choice of reminders is in the account (Your details), not here, so it is left out.
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, type ScrollView } from "react-native";
 import { BizMark, Cta, Grp, Head, Icon, Line, LinkText, LockIcon, Opt, Shell, ShieldIcon, Strip, Tile } from "@/components/cb-ui";
+import { PayWith, walletsFor } from "@/components/mp-pay";
 import { Card, Field, Note, Row, T } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { bookHref, nice, cancelRule, span, dayLabel, draftOf, inZone, keepDraft, providerOf, REFUSALS, sentence, type Biz, type Booking, type Details, type Question, type Service, type Slot } from "@/lib/cb-lib";
 import { duration, firstName, money } from "@/lib/format";
+import { usePayChoice } from "@/lib/mp-cards";
+import { keepBookingPhone, useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c, f, radius } from "@/lib/theme";
 
@@ -31,6 +35,8 @@ export function CbConfirm(p: Props) {
   const s = useSession();
   const me = s.customer;
   const cur = biz.currency;
+  const ft = useFeatures();
+  const pay = usePayChoice(cur);
   const scroll = useRef<ScrollView>(null);
   const at = useRef<Record<string, number>>({});
   const mark = (key: string) => (e: { nativeEvent: { layout: { y: number } } }) => { at.current[key] = e.nativeEvent.layout.y; };
@@ -75,6 +81,8 @@ export function CbConfirm(p: Props) {
   const online = biz.policy.payments_live !== false;
   const firstPct = deposit === 0 ? biz.policy.new_client_deposit_pct ?? 0 : 0;
   const instant = biz.policy.instant !== false;
+  // Money may be asked for online: a deposit, or the deposit a business takes from a first-time client.
+  const mayPay = online && (deposit > 0 || firstPct > 0);
   const ends = inZone(new Date(new Date(slot.starts_at).getTime() + p.mins * 60_000), biz.tz).time;
   const where = biz.showAddress ? [biz.place.address, biz.place.city].filter(Boolean).join(", ") : "";
 
@@ -113,6 +121,8 @@ export function CbConfirm(p: Props) {
           business_slug: biz.slug, staff_id: slot.staff_id, starts_at: slot.starts_at, service_ids: services.map((x) => x.id), client_name: fullName, client_phone: d.phone.trim(), client_email: d.email.trim(),
           notes: d.note.trim(), promo_code: promo?.code ?? "", source: p.src === "search" ? "search" : "app", guest_name: guest,
           answers: intake.filter(answered).map((q) => ({ question_id: q.id, answer: answerOf(q) })),
+          // A kept card to charge, or a wish to keep the one about to be typed. Sent only while saved cards are live and the client is signed in.
+          ...(mayPay ? pay.fields() : {}),
         },
       })).booking;
     } catch (e) {
@@ -133,7 +143,9 @@ export function CbConfirm(p: Props) {
       return;
     }
     keepDraft(biz.slug, null);
+    keepBookingPhone(made.id, d.phone.trim());
     // A deposit paid online: the provider's own page opens. The booking screen then says whether it arrived.
+    // A kept card that was charged at once leaves no page to open: the booking comes back with its deposit paid.
     if (made.payment?.url) {
       try { await WebBrowser.openBrowserAsync(made.payment.url); } catch { /* the next screen has a button to open it again */ }
     }
@@ -279,10 +291,15 @@ export function CbConfirm(p: Props) {
         </View>
       ) : null}
 
-      {deposit > 0 ? (
+      {deposit > 0 && !online ? (
         <>
-          <Grp>{online ? "Pay with" : "Deposit"}</Grp>
-          <Opt radio on title={online ? provider : "Not charged online"} sub={online ? `You pay on ${provider}'s secure page. LogaLuxe never sees your card.` : "Online payment is not switched on for this business yet, so no card is asked for. The deposit is noted on your booking."} />
+          <Grp>Deposit</Grp>
+          <Opt radio on title="Not charged online" sub="Online payment is not switched on for this business yet, so no card is asked for. The deposit is noted on your booking." />
+        </>
+      ) : deposit > 0 || (mayPay && pay.on) ? (
+        <>
+          <Grp note={deposit > 0 ? undefined : "(if a deposit is asked for)"}>Pay with</Grp>
+          <PayWith choice={pay} provider={provider} wallets={walletsFor(ft.wallets, provider)} />
         </>
       ) : null}
 

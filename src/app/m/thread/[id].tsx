@@ -10,7 +10,8 @@ import { ChannelBadge, Choice, Face, MbIcon, RoundBtn, Sheet } from "@/component
 import { WEB_URL, type Row } from "@/lib/api";
 import { clock, firstName, money, plural } from "@/lib/format";
 import { useBadgeRefresh, useFlash, useMapi, usePoll, useRefocus } from "@/lib/mb-hooks";
-import { channelLabel, dayOf, deliveryLabel, deliveryResult, relDay, sand, STATUS_LABEL, toneOf } from "@/lib/mb-util";
+import { channelLabel, dayOf, deliveryLabel, relDay, sand, STATUS_LABEL, toneOf } from "@/lib/mb-util";
+import { sentResult, useModes } from "@/lib/mp-features";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
 import { c, f, radius } from "@/lib/theme";
@@ -76,6 +77,8 @@ function Conversation({ id, sent, sentOn }: { id: string; sent: string; sentOn: 
   const listRef = useRef<FlatList<Flow>>(null);
 
   const one = useLoad<Row>(() => mapi(`/inbox/${encodeURIComponent(id)}`), [id, s.businessToken]);
+  // Whether a WhatsApp message or a text really goes out follows the switches an admin holds.
+  const modes = useModes(one.data?.mail_mode as string | undefined);
   // Drafting with AI is offered only when the API says it is switched on for this business.
   const ai = useLoad<Row>(() => mapi("/ai"), [s.businessToken]);
   useRefocus(() => { void one.reload(); });
@@ -89,12 +92,12 @@ function Conversation({ id, sent, sentOn }: { id: string; sent: string; sentOn: 
   // Opening a conversation marks it read, so the tab's badge is reloaded once it has opened.
   const opened = !!t;
   useEffect(() => { if (opened) refreshBadge(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [opened]);
-  useEffect(() => { if (sent) { const r = deliveryResult(sent, sentOn); show(r.message, r.kind); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { if (sent) { const r = sentResult(sent, sentOn, modes); show(r.message, r.kind); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   // What this install can really do on this conversation's channel.
   let notice = "";
   if (t) {
-    if (t.channel === "whatsapp" || t.channel === "sms") notice = `${channelLabel(t.channel)} is not connected yet. Replies are logged here, not sent to the client.`;
+    if (t.channel === "whatsapp" || t.channel === "sms") notice = modes[t.channel as "whatsapp" | "sms"] === "live" ? "" : `${channelLabel(t.channel)} is not connected yet. Replies are logged here, not sent to the client.`;
     else if (t.channel === "email" && !["live", "resend", "smtp"].includes(String(one.data?.mail_mode))) notice = "No mail provider is set up. Email replies are logged here, not sent.";
     else if (t.channel === "in_app" && !t.has_account) notice = "This client has no LogaLuxe account, so in-app replies are logged here and not delivered.";
   }
@@ -125,7 +128,7 @@ function Conversation({ id, sent, sentOn }: { id: string; sent: string; sentOn: 
     try {
       const out = await mapi<Row>(`/inbox/${encodeURIComponent(id)}/reply`, { method: "POST", body: { body } });
       setText("");
-      const r = deliveryResult(String(out.delivery ?? ""), String(t.channel));
+      const r = sentResult(String(out.delivery ?? ""), String(t.channel), modes);
       show(r.message, r.kind);
       await one.reload();
       refreshBadge();
@@ -288,7 +291,7 @@ function Conversation({ id, sent, sentOn }: { id: string; sent: string; sentOn: 
 
 // ---------- the first message to a client ----------
 
-const WAYS: [string, string, "phone" | "email" | ""][] = [["", "Best way to reach them", ""], ["in_app", "In-app", ""], ["email", "Email", "email"], ["whatsapp", "WhatsApp, logged only", "phone"], ["sms", "SMS, logged only", "phone"]];
+const WAYS: [string, string, "phone" | "email" | ""][] = [["", "Best way to reach them", ""], ["in_app", "In-app", ""], ["email", "Email", "email"], ["whatsapp", "WhatsApp", "phone"], ["sms", "SMS", "phone"]];
 
 function NewThread({ clientId }: { clientId: string }) {
   const s = useSession();
@@ -297,6 +300,9 @@ function NewThread({ clientId }: { clientId: string }) {
   const [text, setText] = useState(""), [channel, setChannel] = useState(""), [sending, setSending] = useState(false), [error, setError] = useState("");
   const one = useLoad<Row>(() => (clientId ? mapi(`/clients/${encodeURIComponent(clientId)}`) : Promise.reject(new Error("Choose a client to write to, from the Clients tab or with New message in the Inbox."))), [clientId, s.businessToken]);
   const cl = one.data?.client as Row | undefined;
+  const modes = useModes();
+  const logOnly = (id: string) => (id === "whatsapp" || id === "sms") && modes[id] === "log";
+  const off = (["whatsapp", "sms"] as const).filter((k) => modes[k] === "log").map((k) => (k === "sms" ? "SMS" : "WhatsApp"));
 
   const send = async () => {
     const body = text.trim();
@@ -341,11 +347,11 @@ function NewThread({ clientId }: { clientId: string }) {
                 <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: channel === id ? c.ink : c.line2, alignItems: "center", justifyContent: "center" }}>
                   {channel === id ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.ink }} /> : null}
                 </View>
-                <T size={14} weight="medium" style={{ flex: 1 }}>{label}{missing ? (needs === "email" ? " (no address on file)" : " (no number on file)") : ""}</T>
+                <T size={14} weight="medium" style={{ flex: 1 }}>{label}{logOnly(id) ? ", logged only" : ""}{missing ? (needs === "email" ? " (no address on file)" : " (no number on file)") : ""}</T>
               </Pressable>
             );
           })}
-          <T size={12} muted>In-app reaches clients who have a LogaLuxe account. Email goes out when a mail provider is set up. WhatsApp and SMS are not connected yet, so those messages are logged, not sent.</T>
+          <T size={12} muted>In-app reaches clients who have a LogaLuxe account. Email goes out when a mail provider is set up.{off.length ? ` ${off.join(" and ")} ${off.length === 1 ? "is" : "are"} not connected yet, so those messages are logged, not sent.` : ""}</T>
         </View>
       </ScrollView>
       <Composer value={text} onChange={setText} onSend={send} busy={sending} placeholder={`Message ${firstName(name)}`} sendLabel="Send" />

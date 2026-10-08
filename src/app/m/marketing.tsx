@@ -9,6 +9,7 @@ import { Card, Empty, Icon, Note, Row } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { money, plural } from "@/lib/format";
 import { dateMed } from "@/lib/mb-util";
+import { channelsNote, modesOf } from "@/lib/mp-features";
 import { soft } from "@/lib/mc-util";
 import { useGrow } from "@/lib/mg-load";
 import { NO_SIZE, n, pct, pct1, promoState, type Size } from "@/lib/mg-util";
@@ -51,9 +52,11 @@ export default function Marketing() {
 
   return (
     <Page title="Marketing" onRefresh={refresh} refreshing={refreshing}>
-      <View style={{ marginTop: 14 }}>
-        <Note kind="gold">{emailLive ? "Email is delivered. WhatsApp and SMS are not connected yet: those messages are logged, not delivered." : "WhatsApp, SMS and email are not connected yet. Messages are logged, not delivered."}</Note>
-      </View>
+      {channelsNote(modesOf(modes)) ? (
+        <View style={{ marginTop: 14 }}>
+          <Note kind="gold">{channelsNote(modesOf(modes))}</Note>
+        </View>
+      ) : null}
 
       <Night style={{ marginTop: 12 }}>
         <NightLabel>{emailLive ? "Sent" : "Recorded"} this month</NightLabel>

@@ -5,10 +5,12 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, Linking, Pressable, Text, View } from "react-native";
 import { BizMark, Cta, Head, Icon, Line, LinkText, MinusIcon, Round, Shell, Strip, Tile } from "@/components/cb-ui";
+import { WalletLine, walletsFor } from "@/components/mp-pay";
 import { Btn, Card, Failed, Loading, Note, Row, T } from "@/components/ui";
 import { api, API_URL, ApiError } from "@/lib/api";
 import { addDays, nice, bookHref, span, dayLabel, inZone, providerOf, sentence, WEEKDAYS, weekdayOf, whenLabel, type Biz, type Booking } from "@/lib/cb-lib";
 import { duration, firstName, money } from "@/lib/format";
+import { bookingPhone, phoneWord, useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { useLoad } from "@/lib/use-load";
 import { c, f } from "@/lib/theme";
@@ -17,6 +19,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: string; src: string }) {
   const s = useSession();
+  const ft = useFeatures();
   // The public copy of the booking is all a guest can read. A signed-in client's own copy proves it is theirs.
   const q = useLoad(async () => {
     if (!UUID.test(id)) throw new ApiError(404, "We could not find that booking.");
@@ -70,6 +73,8 @@ export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: str
   const freeUntil = new Date(new Date(bk.starts_at).getTime() - hours * 3600_000);
   const provider = providerOf(biz.market);
   const due = bk.payment?.amount_cents ?? bk.deposit_cents;
+  // A word on the phone as well: said only when that channel is live and this booking was made here with a number it can reach.
+  const told = cancelled || unpaid ? "" : phoneWord(ft, String(s.customer?.preferred_channel ?? ""), bookingPhone(bk.id));
 
   const title = cancelled ? "This booking was cancelled" : unpaid ? "Your time is held" : requested ? `Request sent${first ? `, ${first}` : ""}.` : `You're booked${first ? `, ${first}` : ""}.`;
   const line = cancelled ? "Nothing more will happen with it."
@@ -81,7 +86,7 @@ export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: str
   const footer = cancelled
     ? <Cta onPress={() => router.replace(bookHref(biz.slug, { services: ids, src }) as never)}>Book again</Cta>
     : unpaid
-      ? <View style={{ gap: 8 }}><Cta busy={paying} onPress={() => pay(bk.payment!.url)}>Pay {money(due, bk.payment?.currency || cur)} deposit</Cta><T muted size={11} center>You pay on {provider}&apos;s secure page. LogaLuxe never sees your card.</T></View>
+      ? <View style={{ gap: 8 }}><Cta busy={paying} onPress={() => pay(bk.payment!.url)}>Pay {money(due, bk.payment?.currency || cur)} deposit</Cta><T muted size={11} center>You pay on {provider}&apos;s secure page. LogaLuxe never sees your card.</T>{walletsFor(ft.wallets, provider) ? <WalletLine align="center" /> : null}</View>
       : <Cta onPress={() => router.replace("/client/bookings")}>See my bookings</Cta>;
 
   return (
@@ -97,6 +102,8 @@ export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: str
           <Text style={{ fontFamily: f.body, fontSize: 13, lineHeight: 18, color: "#C9BCB0", marginTop: 2 }}>{line}</Text>
         </View>
       </View>
+
+      {told ? <T muted size={13} style={{ marginTop: 10 }}>{requested ? "Your request" : "A confirmation"} was also sent {told} to {bookingPhone(bk.id)}.</T> : null}
 
       <Card style={{ marginTop: 12, padding: 16, gap: 14 }}>
         <Row>

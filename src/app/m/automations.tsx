@@ -8,6 +8,7 @@ import { Btn, Card, Icon, Note, Row, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { useGrow } from "@/lib/mg-load";
 import { BOOKING_KEYS, sampleFor, sentStat, tokensFor } from "@/lib/mg-util";
+import { channelsNote, modesOf } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 
@@ -30,7 +31,7 @@ export default function Automations() {
 
   const autos = (d.automations ?? []) as Data[];
   const modes = (d.modes ?? {}) as Record<string, string>, capN = Number(d.cap ?? 0);
-  const emailLive = modes.email !== "log";
+  const emailLive = modes.email !== "log", waLive = modesOf(modes).whatsapp === "live";
   const link = String(d.booking_link ?? "");
   const patch = (key: string, change: Data) => setData((x) => (x && typeof x === "object" ? { ...x, automations: ((x as Data).automations as Data[]).map((a) => (a.key === key ? { ...a, ...change } : a)) } : x));
 
@@ -67,7 +68,7 @@ export default function Automations() {
   return (
     <Page title="Automatic messages" onRefresh={refresh} refreshing={refreshing} over={<Toast note={note} onDone={() => setNote(null)} />}>
       <View style={{ marginTop: 14, gap: 10 }}>
-        <Note kind="gold">{emailLive ? "Email is delivered. WhatsApp and SMS are not connected yet: those messages are logged, not delivered." : "WhatsApp, SMS and email are not connected yet. Messages are logged, not delivered."}</Note>
+        {channelsNote(modesOf(modes)) ? <Note kind="gold">{channelsNote(modesOf(modes))}</Note> : null}
         {m?.status !== "live" ? <Note kind="gold">Automatic messages only run for a live business. Yours is {m?.status === "paused" ? "paused" : "not live yet"}, so nothing goes out for now. You can still set the wording.</Note> : null}
       </View>
 
@@ -111,9 +112,9 @@ export default function Automations() {
             <MessageBox value={open.message} onChange={(message) => setOpen({ ...open, message })} max={MAX} tokens={tokensFor(booking)} sample={sampleFor(m, link, booking)} previewLabel="Preview · sample values" />
             <Card style={{ paddingHorizontal: 16, paddingVertical: 2 }}>
               <KV k="Trigger" v={String(sel.when)} />
-              <KV k="Sent on" last v={<Row gap={6} wrap style={{ justifyContent: "flex-end" }}><Tag kind={emailLive ? "ok" : "grey"}>{`Email${emailLive ? "" : " · logged only"}`}</Tag><Tag>WhatsApp · logged only</Tag></Row>} />
+              <KV k="Sent on" last v={<Row gap={6} wrap style={{ justifyContent: "flex-end" }}><Tag kind={emailLive ? "ok" : "grey"}>{`Email${emailLive ? "" : " · logged only"}`}</Tag><Tag kind={waLive ? "ok" : "grey"}>{`WhatsApp${waLive ? "" : " · logged only"}`}</Tag></Row>} />
             </Card>
-            <T size={12} muted>You do not choose the channel here. A client with an email address gets an email; a client with only a phone number gets WhatsApp, which is not connected yet.</T>
+            <T size={12} muted>You do not choose the channel here. A client with an email address gets an email; a client with only a phone number gets WhatsApp{waLive ? "." : ", which is not connected yet."}</T>
             <Tip>
               Last 30 days: {sentStat(Number(sel.sent_30d), Number(sel.delivered_30d)).toLowerCase()}. {sel.marketing
                 ? `This is a marketing message. It counts toward the cap of ${capN} per client in 30 days, and clients who opted out do not get it.`

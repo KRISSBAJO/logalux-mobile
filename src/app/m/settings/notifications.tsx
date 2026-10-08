@@ -6,6 +6,7 @@ import { Card, Note, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { LinkText } from "@/components/ma-kit";
 import { View } from "react-native";
+import { useModes } from "@/lib/mp-features";
 
 const ROWS: RuleRow[] = [
   { key: "new_booking_email", title: "New booking", sub: "An email when a client books", on: "Saved. You get an email when a client books.", off: "Saved. No email when a client books." },
@@ -13,6 +14,15 @@ const ROWS: RuleRow[] = [
   { key: "daily_summary", title: "Morning summary", sub: "Today's bookings in one email", on: "Saved. You get the day's bookings in one email each morning.", off: "Saved. No morning summary." },
   { key: "low_stock_email", title: "Low stock", sub: "An email when a product reaches its reorder level", on: "Saved. You get an email when a product runs low.", off: "Saved. No email when a product runs low." },
 ];
+
+/** What WhatsApp and SMS really do today, by the switches an admin holds. */
+function PhoneChannels() {
+  const modes = useModes();
+  const live = (["whatsapp", "sms"] as const).filter((k) => modes[k] === "live").map((k) => (k === "sms" ? "SMS" : "WhatsApp"));
+  const log = (["whatsapp", "sms"] as const).filter((k) => modes[k] === "log").map((k) => (k === "sms" ? "SMS" : "WhatsApp"));
+  const sub = [live.length ? `${live.join(" and ")}: messages are sent.` : "", log.length ? `${log.join(" and ")}: not connected yet. Messages are logged, not delivered.` : ""].filter(Boolean).join(" ");
+  return <SetRow last title="WhatsApp and SMS" sub={sub} right={<Tag kind={log.length ? "grey" : "ok"}>{log.length === 2 ? "Not available yet" : log.length ? "Partly connected" : "Connected"}</Tag>} />;
+}
 
 export default function Notifications() {
   return (
@@ -27,7 +37,7 @@ export default function Notifications() {
             <Grp style={{ marginTop: 8 }}>Messages to clients</Grp>
             <Card>
               <Item title="Confirmations, reminders and review requests" sub="Turned on and off, and worded, in Automatic messages" onPress={() => router.push("/m/automations" as never)} />
-              <SetRow last title="WhatsApp and SMS" sub="Not connected yet. Messages on these channels are logged, not delivered." right={<Tag>Not available yet</Tag>} />
+              <PhoneChannels />
             </Card>
           </>
         );

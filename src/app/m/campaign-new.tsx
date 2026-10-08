@@ -11,6 +11,7 @@ import { type Row as Data } from "@/lib/api";
 import { soft } from "@/lib/mc-util";
 import { useGrow } from "@/lib/mg-load";
 import { AUDIENCES, AUDIENCE_LABEL, CHANNELS, CHANNEL_LABEL, NO_SIZE, n, sampleFor, tokensFor, type Size } from "@/lib/mg-util";
+import { liveChannels, modesOf } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 
@@ -141,7 +142,7 @@ export default function CampaignNew() {
             <Note kind="gold">
               {channel === "email"
                 ? "Email is not connected yet, so these messages are logged, not delivered."
-                : `${chName} is not connected yet, so these messages are logged, not delivered. ${emailLive ? "Email is the only channel that reaches clients today." : "Email is not connected yet either."}`}
+                : `${chName} is not connected yet, so these messages are logged, not delivered. ${liveChannels(modesOf(modes)) ? `${liveChannels(modesOf(modes))} ${liveChannels(modesOf(modes)).includes(" and ") ? "reach" : "is the only channel that reaches"} clients today.` : "No channel reaches clients today."}`}
             </Note>
           ) : null}
         </View>

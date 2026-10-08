@@ -3,9 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Choice, Grp, Sheet } from "@/components/cc-ui";
+import { PayWith, WalletLine, walletsFor } from "@/components/mp-pay";
 import { Btn, Chip, Field, Icon, Note, Row, T } from "@/components/ui";
 import { api, qs, type Row as Data } from "@/lib/api";
-import { PROBLEMS, addDays, cancelAfter, cancelBefore, dateShort, dow, monthName, openPay, payLine, tipChoices, today, weekdayName } from "@/lib/cc-data";
+import { PROBLEMS, addDays, cancelAfter, cancelBefore, dateShort, dow, monthName, openPay, payLine, provider, tipChoices, today, weekdayName } from "@/lib/cc-data";
+import { cardName, usePayChoice } from "@/lib/mp-cards";
+import { useFeatures } from "@/lib/mp-features";
 import { clock, dayLong, firstName, money, plural, when, ymd } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
@@ -362,11 +365,17 @@ function Step({ label, sign, onPress, off }: { label: string; sign: string; onPr
 
 // ---------- tip ----------
 
-/** 15, 20 or 25 percent of the visit, or an amount of the client's own. With payments live the answer is a payment page. */
+/**
+ * 15, 20 or 25 percent of the visit, or an amount of the client's own. With payments live the answer is a
+ * payment page, or, when a kept card was chosen and the money was taken at once, `paid: true` and no page.
+ */
 export function TipSheet({ open, onClose, b, onTipped }: Common & { onTipped: (message: string, payUrl?: string) => void }) {
   const s = useSession();
   const total = Number(b.total_cents) || 0, currency = String(b.currency || "USD"), ngn = currency === "NGN";
   const { floor, choices } = useMemo(() => tipChoices(total, currency), [total, currency]);
+  const ft = useFeatures();
+  const pay = usePayChoice(currency);
+  const wallets = walletsFor(ft.wallets, provider(currency));
   const [pick, setPick] = useState<number | "own">("own");
   const [own, setOwn] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -377,9 +386,10 @@ export function TipSheet({ open, onClose, b, onTipped }: Common & { onTipped: (m
     if (cents <= 0) { setError("Choose an amount for the tip."); return; }
     setBusy(true); setError("");
     try {
-      const out = await s.capi<Data>(`/auth/bookings/${b.id}/tip`, { method: "POST", body: { amount_cents: cents } });
+      const out = await s.capi<Data>(`/auth/bookings/${b.id}/tip`, { method: "POST", body: { amount_cents: cents, ...pay.fields() } });
       const amount = money(Number(out.amount_cents) || cents, out.currency || currency);
-      if (out.payment?.url) onTipped(`Finish your ${amount} tip on the payment page. It is added here once it is paid.`, out.payment.url);
+      if (out.paid === true) onTipped(`Thank you. Your ${amount} tip to ${b.business} was paid${pay.card ? ` with ${cardName(pay.card)}` : ""}.`);
+      else if (out.payment?.url) onTipped(`Finish your ${amount} tip on the payment page. It is added here once it is paid.`, out.payment.url);
       else onTipped(`Thank you. Your ${amount} tip is on its way to ${b.business}.`);
     } catch (e) {
       setError((e as Error).message);
@@ -396,7 +406,13 @@ export function TipSheet({ open, onClose, b, onTipped }: Common & { onTipped: (m
         <TipBox on={pick === "own"} top="Other" bottom="amount" onPress={() => setPick("own")} />
       </View>
       {pick === "own" ? <Field label={`Amount in ${ngn ? "naira (₦)" : "dollars ($)"}`} value={own} onChangeText={setOwn} keyboardType="decimal-pad" inputMode="decimal" placeholder={String(floor / 100)} /> : null}
-      <T size={13} muted>From {money(floor, currency)}{total > 0 ? ` up to ${money(total, currency)}, the price of the visit` : ""}. If a payment page opens, you pay there. LogaLuxe never sees your card.</T>
+      <T size={13} muted>From {money(floor, currency)}{total > 0 ? ` up to ${money(total, currency)}, the price of the visit` : ""}.{pay.on ? "" : " If a payment page opens, you pay there. LogaLuxe never sees your card."}</T>
+      {pay.on ? (
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontFamily: f.semi, fontSize: 12, letterSpacing: 0.96, textTransform: "uppercase", color: c.muted }}>Pay with</Text>
+          <PayWith choice={pay} provider={provider(currency)} wallets={wallets} when="when you send the tip" />
+        </View>
+      ) : wallets ? <WalletLine /> : null}
       {error ? <Note kind="bad">{error}</Note> : null}
     </Sheet>
   );

@@ -10,7 +10,10 @@ import { TipBox } from "@/components/cc-booking-sheets";
 import { BackTitle, Grp } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Failed, Icon, Loading, Note, Screen, T } from "@/components/ui";
 import { ApiError, media, type Row as Data } from "@/lib/api";
-import { openPay, tipChoices, useReturn } from "@/lib/cc-data";
+import { PayWith, WalletLine, walletsFor } from "@/components/mp-pay";
+import { openPay, provider, tipChoices, useReturn } from "@/lib/cc-data";
+import { cardName, usePayChoice } from "@/lib/mp-cards";
+import { useFeatures } from "@/lib/mp-features";
 import { dayShort, firstName, money } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
@@ -42,6 +45,8 @@ export default function Review() {
   useReturn(() => { if (s.clientToken && q.data) q.refresh(); }); // back from paying a tip
 
   const b = q.data;
+  const ft = useFeatures();
+  const pay = usePayChoice(String(b?.currency || "USD"));
   const head = <BackTitle title={b?.review_id ? "Your review" : "How was it?"} />;
 
   if (!s.ready) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
@@ -132,9 +137,10 @@ export default function Review() {
     }
     if (tip > 0) {
       try {
-        const t = await s.capi<Data>(`/auth/bookings/${id}/tip`, { method: "POST", body: { amount_cents: tip } });
+        const t = await s.capi<Data>(`/auth/bookings/${id}/tip`, { method: "POST", body: { amount_cents: tip, ...pay.fields() } });
         const amount = money(Number(t.amount_cents) || tip, t.currency || currency);
-        if (t.payment?.url) { payUrl = t.payment.url; out.push({ kind: "gold", text: `Finish your ${amount} tip on the payment page. It is added once it is paid.` }); }
+        if (t.paid === true) out.push({ kind: "ok", text: `Your ${amount} tip to ${b.business} was paid${pay.card ? ` with ${cardName(pay.card)}` : ""}.` });
+        else if (t.payment?.url) { payUrl = t.payment.url; out.push({ kind: "gold", text: `Finish your ${amount} tip on the payment page. It is added once it is paid.` }); }
         else out.push({ kind: "ok", text: `Your ${amount} tip is on its way to ${b.business}.` });
       } catch (e) {
         out.push({ kind: "bad", text: `The tip was not added. ${(e as Error).message}` });
@@ -257,7 +263,13 @@ export default function Review() {
               <TipBox on={tip === 0} top="No tip" onPress={() => setTip(0)} />
               {tips.map((x) => <TipBox key={x.pct} on={tip === x.cents} top={money(x.cents, currency)} bottom={`${x.pct}%`} onPress={() => setTip(x.cents)} />)}
             </View>
-            <T size={12} muted style={{ marginTop: 8 }}>The tip goes to {b.business}. If a payment page opens, you pay there. LogaLuxe never sees your card.</T>
+            <T size={12} muted style={{ marginTop: 8 }}>The tip goes to {b.business}.{pay.on && tip > 0 ? "" : " If a payment page opens, you pay there. LogaLuxe never sees your card."}</T>
+            {tip > 0 && pay.on ? (
+              <>
+                <Grp>Pay the tip with</Grp>
+                <PayWith choice={pay} provider={provider(currency)} wallets={walletsFor(ft.wallets, provider(currency))} when="when you post the review" />
+              </>
+            ) : walletsFor(ft.wallets, provider(currency)) ? <View style={{ marginTop: 8 }}><WalletLine /></View> : null}
           </>
         ) : null}
 

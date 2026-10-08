@@ -1,7 +1,9 @@
 // Joining a business's waitlist for days that are full (design: C10-Waitlist).
 // Opened as /c/waitlist/<slug>?services=<ids>&staff=<id>&date=<YYYY-MM-DD>.
 // The design promises a WhatsApp message and a slot held for 15 minutes. Neither exists: the business sees the
-// list and gets in touch itself, so that is what the screen says. There is no call to leave the list either,
+// list and gets in touch itself, so that is what the screen says. Nothing is sent by itself when a time opens,
+// with any feature on. While texts to clients are live the business can text from its inbox, and only then,
+// for a number with a country code, does the screen say so. There is no call to leave the list either,
 // so that button is left out.
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +14,7 @@ import { api } from "@/lib/api";
 import { chosenFrom, useBiz } from "@/lib/cb-biz";
 import { addDays, bookHref, dayLabel, DOW_KEYS, dowShort, isDate, mondayOf, one, weekdayOf, whenLabel, type Slot } from "@/lib/cb-lib";
 import { duration, firstName, money, ymd } from "@/lib/format";
+import { useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 
@@ -22,6 +25,7 @@ export default function Waitlist() {
   const p = useLocalSearchParams<{ slug: string; services?: string; staff?: string; date?: string }>();
   const slug = one(p.slug);
   const s = useSession();
+  const ft = useFeatures();
   const q = useBiz(slug);
   const scroll = useRef<ScrollView>(null);
   const back = () => (router.canGoBack() ? router.back() : router.replace(`/c/b/${slug}` as never));
@@ -109,7 +113,7 @@ export default function Waitlist() {
         </View>
         <View style={{ marginTop: 14, backgroundColor: c.goldBg, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", gap: 12, alignItems: "center" }}>
           <Icon name="chat" size={22} color={c.goldInk} />
-          <Text style={{ flex: 1, fontFamily: f.body, fontSize: 13, lineHeight: 19, color: c.goldInk }}>{biz.name} can see you are waiting and will get in touch on {phone.trim()} if a time opens. Nothing is booked and nothing is charged until you take a time.</Text>
+          <Text style={{ flex: 1, fontFamily: f.body, fontSize: 13, lineHeight: 19, color: c.goldInk }}>{biz.name} can see you are waiting and will get in touch on {phone.trim()} if a time opens.{ft.sms_messages && phone.trim().startsWith("+") ? " It can text you at that number." : ""} Nothing is booked and nothing is charged until you take a time.</Text>
         </View>
         <Grp style={{ marginTop: 20 }}>Meanwhile</Grp>
         <Card style={{ paddingVertical: 4, paddingHorizontal: 16 }}>

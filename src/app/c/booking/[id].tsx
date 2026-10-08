@@ -8,7 +8,9 @@ import { CancelSheet, MoveSheet, ProblemSheet, RepeatSheet, SeriesSheet, TipShee
 import { ActBtn, DateTile, Grp, Item, Rows } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Failed, Loading, Note, Pill, Row, Screen, T, TopBar } from "@/components/ui";
 import { api, media, type Row as Data } from "@/lib/api";
-import { bookingState, isUpcoming, openCalendar, openMap, openPay, payLine, problemState, span, tile, useRefocus, useReturn } from "@/lib/cc-data";
+import { WalletLine, walletsFor } from "@/components/mp-pay";
+import { bookingState, isUpcoming, openCalendar, openMap, openPay, payLine, problemState, provider, span, tile, useRefocus, useReturn } from "@/lib/cc-data";
+import { useFeatures } from "@/lib/mp-features";
 import { dayLong, money, plural, when } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
@@ -19,6 +21,7 @@ type Doing = "" | "move" | "cancel" | "series" | "repeat" | "tip" | "problem";
 export default function Booking() {
   const { id, do: start } = useLocalSearchParams<{ id: string; do?: string }>();
   const s = useSession();
+  const ft = useFeatures();
   const [doing, setDoing] = useState<Doing>("");
   const [note, setNote] = useState<{ kind: "ok" | "bad" | "gold"; text: string } | null>(null);
   const started = useRef(false);
@@ -119,6 +122,7 @@ export default function Booking() {
         {upcoming && dep > 0 && !b.deposit_paid && payment?.url ? (
           <View style={{ backgroundColor: c.goldBg, borderRadius: 16, padding: 14, gap: 10 }}>
             <T size={14} color={c.goldInk}>Pay the {money(payment.amount_cents ?? dep, payment.currency ?? b.currency)} deposit to keep this time{payment.expires_at ? `. It is held until ${when(payment.expires_at, tz)}` : ""}. {payLine(b.currency)}</T>
+            {walletsFor(ft.wallets, provider(b.currency)) ? <WalletLine /> : null}
             <Btn small onPress={async () => { await openPay(payment.url); q.refresh(); }} style={{ alignSelf: "flex-start" }}>Pay deposit</Btn>
           </View>
         ) : null}

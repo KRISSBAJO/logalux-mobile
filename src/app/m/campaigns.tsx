@@ -11,6 +11,7 @@ import { type Row as Data } from "@/lib/api";
 import { plural } from "@/lib/format";
 import { useGrow } from "@/lib/mg-load";
 import { AUDIENCES, NO_SIZE, n, type Size } from "@/lib/mg-util";
+import { channelsNote, modesOf } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 
@@ -31,15 +32,16 @@ export default function Campaigns() {
 
   const k = (d.kpis ?? {}) as Data, modes = (d.modes ?? {}) as Record<string, string>;
   const audiences = (d.audiences ?? {}) as Record<string, Size>;
-  const emailLive = modes.email !== "log";
   const start = (audience?: string) => router.push(`/m/campaign-new${audience ? `?audience=${audience}` : ""}` as never);
 
   const header = (
     <View>
       <Header title="Campaigns" right={<SmallBtn kind="ink" icon="plus" onPress={() => start()}>New</SmallBtn>} />
-      <View style={{ marginTop: 14 }}>
-        <Note kind="gold">{emailLive ? "Email is delivered. WhatsApp and SMS are not connected yet: those messages are logged, not delivered." : "WhatsApp, SMS and email are not connected yet. Messages are logged, not delivered."}</Note>
-      </View>
+      {channelsNote(modesOf(modes)) ? (
+        <View style={{ marginTop: 14 }}>
+          <Note kind="gold">{channelsNote(modesOf(modes))}</Note>
+        </View>
+      ) : null}
 
       <Grp>Who you can reach</Grp>
       <Card>

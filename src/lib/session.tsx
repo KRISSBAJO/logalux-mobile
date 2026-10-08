@@ -13,13 +13,15 @@ type State = {
   mode: Mode;
   clientToken: string | null;
   businessToken: string | null;
-  customer: Row | null; // {id, email, first_name, last_name, phone, email_verified}
+  customer: Row | null; // {id, email, first_name, last_name, phone, email_verified, phone_verified, preferred_channel}
   merchant: Row | null; // {id, name, email, role, staff_id, business_id, business, slug, currency, timezone, market, plan, status, permissions}
 };
 
 type Session = State & {
   setMode: (m: Mode) => void;
   signInClient: (email: string, password: string) => Promise<void>;
+  /** Signs the client in with a token the API has just handed over, for example after a texted code was verified. */
+  signInClientToken: (token: string) => Promise<void>;
   signUpClient: (fields: { first_name: string; last_name: string; email: string; phone: string; password: string; ref?: string }) => Promise<void>;
   /** Answers `{needCode: true}` when the account has two-step sign-in on and no code was given. */
   signInBusiness: (email: string, password: string, code?: string) => Promise<{ needCode: boolean }>;
@@ -96,6 +98,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const out = await api<Row>("/auth/login", { body: { email, password } });
         await store.set(KEYS.client, out.token);
         const got = await load(out.token, s.businessToken);
+        await store.set(KEYS.mode, "client");
+        setS((x) => ({ ...x, ...got, mode: "client" }));
+      },
+      signInClientToken: async (token) => {
+        await store.set(KEYS.client, token);
+        const got = await load(token, s.businessToken);
         await store.set(KEYS.mode, "client");
         setS((x) => ({ ...x, ...got, mode: "client" }));
       },

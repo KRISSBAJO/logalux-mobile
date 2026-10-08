@@ -190,9 +190,11 @@ export default function HoursAndPolicies() {
                 );
               })}
             </Card>
-          ) : <Card style={{ padding: 18 }}><T muted>This business has no location yet. Add one on the web and its hours show here.</T></Card>}
+          ) : <Card style={{ padding: 18 }}><T muted>This business has no location yet. Add one under Settings, Locations, and its hours show here.</T></Card>}
           <T size={12} muted style={{ marginTop: 8 }}>Tap a day&apos;s times to change them. Bookings follow these hours.</T>
-          <WebLink path="/business/staff?tab=timeoff">Time off, each person&apos;s own hours and other locations open on the web</WebLink>
+          <WebLink to="/m/staff/time-off">Time off</WebLink>
+          <WebLink to="/m/staff">Each person&apos;s own hours</WebLink>
+          <WebLink to="/m/settings/locations">Other locations</WebLink>
 
           <Grp style={{ marginTop: 8 }}>Booking window</Grp>
           <Card>
@@ -202,7 +204,7 @@ export default function HoursAndPolicies() {
               onPress={() => askNum({ title: "How far ahead", sub: "The number of days ahead clients can book.", label: "Days ahead", value: String(maxD), group: "booking", key: "max_days" })} />
             <SetRow last title="Instant booking" sub={booking.instant ? "Confirmed without your approval" : "Each booking waits for you as a request"} right={<Sw on={!!booking.instant} disabled={busy === "booking.instant"} label="Instant booking" onPress={() => quick("booking", "instant", !booking.instant)} />} />
           </Card>
-          <WebLink path="/business/settings?tab=page">Waitlist, &quot;anyone available&quot; and search listing open on the web</WebLink>
+          <WebLink to="/m/settings/booking">Waitlist, &quot;anyone available&quot; and search listing</WebLink>
         </>
       ) : (
         <>

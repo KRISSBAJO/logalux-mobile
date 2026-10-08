@@ -1,5 +1,5 @@
 // More: the business and its settings (design: M11-More).
-// Every line under a row is read from the API. The big desktop tools open the web app.
+// Every tool a business has opens inside the app. Only help pages open the website.
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -137,39 +137,65 @@ export default function More() {
 
       <Grp>Set up</Grp>
       <Card>
-        <Item icon={<McIcon name="list" />} title="Services & pricing" sub={servicesLine} onPress={go("/m/services")} last={managerOnly} />
+        <Item icon={<McIcon name="list" />} title="Services & pricing" sub={servicesLine} onPress={go("/m/services")} />
         {managerOnly ? null : (
           <>
             <Item icon={<Icon name="clock" size={18} />} title="Hours & policies" sub={hoursLine} onPress={go("/m/hours")} />
-            <Item icon={<McIcon name="photo" />} title="Profile & portfolio" sub="Photos, your bio and what clients see" web onPress={web("/business/storefront")} />
-            <Item icon={<McIcon name="staffAdd" />} title="Staff & chairs" sub={team ? `${plural(team, "person", "people")} on the calendar` : "Rosters, time off and pay"} web onPress={web("/business/staff")} />
-            <Item icon={<McIcon name="box" />} title="Inventory & orders" sub="Stock, suppliers and shop orders" web onPress={web("/business/inventory")} last={showSetup} />
-            {showSetup ? null : <Item icon={<Icon name="check" size={18} />} title="Setup checklist" sub={setup ? `${setup.done} of ${setup.total} done` : "What is done and what is left"} onPress={go("/m/onboarding")} last />}
+            <Item icon={<McIcon name="photo" />} title="Profile & portfolio" sub="Photos, your bio and what clients see" onPress={go("/m/profile")} />
           </>
         )}
+        <Item icon={<McIcon name="staffAdd" />} title="Staff & chairs" sub={team ? `${plural(team, "person", "people")} on the calendar · hours and time off` : "The team, hours and time off"} onPress={go("/m/staff")} last={managerOnly || showSetup} />
+        {managerOnly || showSetup ? null : <Item icon={<Icon name="check" size={18} />} title="Setup checklist" sub={setup ? `${setup.done} of ${setup.total} done` : "What is done and what is left"} onPress={go("/m/onboarding")} last />}
       </Card>
 
       {managerOnly ? null : (
         <>
+          <Grp>Sell</Grp>
+          <Card>
+            <Item icon={<McIcon name="box" />} title="Inventory" sub="Products, stock levels and what to reorder" onPress={go("/m/inventory")} />
+            <Item icon={<Icon name="shop" size={18} />} title="Online orders" sub="Shop orders to hand over or send" onPress={go("/m/orders")} />
+            <Item icon={<McIcon name="refund" />} title="Returns" sub="Customers asking to send something back" onPress={go("/m/returns")} />
+            <Item icon={<McIcon name="gift" />} title="Packages" sub="Sets of visits paid for up front" onPress={go("/m/packages")} />
+            <Item icon={<Icon name="repeat" size={18} />} title="Memberships" sub="Monthly plans with discounts and included services" onPress={go("/m/memberships")} />
+            <Item icon={<McIcon name="percent" />} title="Pricing rules" sub="Peak and quiet prices, and a price check" onPress={go("/m/pricing-rules")} />
+            <Item icon={<Icon name="info" size={18} />} title="Questions at booking" sub="What clients are asked when they book online" onPress={go("/m/questions")} />
+            <Item icon={<Icon name="users" size={18} />} title="Waitlist" sub="People hoping for a slot" onPress={go("/m/waitlist")} last />
+          </Card>
+
           <Grp>Grow</Grp>
           <Card>
             <Item icon={<Icon name="share" size={18} />} title="Share your booking page" sub="Your link, to copy or send" onPress={go("/m/share")} />
-            <Item icon={<McIcon name="megaphone" />} title="Marketing" sub="Campaigns, automatic messages and promo codes" web onPress={web("/business/marketing")} />
-            <Item icon={<McIcon name="gift" />} title="Loyalty & referrals" sub="Points clients earn and spend" web onPress={web("/business/marketing?tab=loyalty")} />
-            <Item icon={<McIcon name="chart" />} title="Reports & insights" sub="Sales, bookings and the team's numbers" web onPress={web("/business/reports")} last />
+            <Item icon={<McIcon name="link" />} title="QR code and link" sub="Show the code, or add booking to your site" onPress={go("/m/qr")} />
+            <Item icon={<McIcon name="megaphone" />} title="Marketing" sub="Campaigns, automatic messages and promo codes" onPress={go("/m/marketing")} />
+            <Item icon={<Icon name="heart" size={18} />} title="Loyalty points" sub="Points clients earn and spend" onPress={go("/m/loyalty")} />
+            <Item icon={<Icon name="search" size={18} />} title="New clients from LogaLuxe" sub="Who LogaLuxe brought you and what each cost" onPress={go("/m/leads")} />
+            <Item icon={<Icon name="star" size={18} />} title="Reviews" sub="Read them, reply and pin one" onPress={go("/m/reviews")} />
+            <Item icon={<McIcon name="chart" />} title="Reports & insights" sub="Sales, bookings and the team's numbers" onPress={go("/m/reports")} last />
+          </Card>
+
+          <Grp>Money</Grp>
+          <Card>
+            <Item icon={<Icon name="wallet" size={18} />} title="Money" sub="Your balance and what came in" onPress={go("/m/money")} />
+            <Item icon={<McIcon name="bank" />} title="Payout account" sub={payoutLine} onPress={go("/m/payouts")} />
+            <Item icon={<McIcon name="doc" />} title="Statements" sub="Each month: what came in, fees and payouts" onPress={go("/m/statements")} />
+            <Item icon={<Icon name="card" size={18} />} title="Plan" sub={PLAN[m.plan] ?? m.plan} onPress={go("/m/plan")} right={m.plan === "free" && !ownerOnly ? <Tag kind="gold">Upgrade</Tag> : undefined} last />
           </Card>
         </>
       )}
 
+      {managerOnly ? (
+        <>
+          <Grp>Share</Grp>
+          <Card>
+            <Item icon={<McIcon name="link" />} title="QR code and link" sub="Show the booking code to a client" onPress={go("/m/qr")} last />
+          </Card>
+        </>
+      ) : null}
+
       <Grp>Account</Grp>
       <Card>
-        {managerOnly ? null : (
-          <>
-            <Item title="Payouts & bank" sub={payoutLine} onPress={go("/m/money")} />
-            <Item title="Plan" sub={PLAN[m.plan] ?? m.plan} web onPress={web("/business/settings?tab=billing")} right={m.plan === "free" && !ownerOnly ? <Tag kind="gold">Upgrade</Tag> : undefined} />
-            <Item title="Notifications" sub="Emails about new bookings, cancellations and stock" web onPress={web("/business/settings?tab=notif")} />
-          </>
-        )}
+        <Item icon={<Icon name="settings" size={18} />} title="Settings" sub={managerOnly ? "Your own alerts and sign-in" : "Business details, locations, tax and alerts"} onPress={go("/m/settings")} />
+        <Item icon={<McIcon name="shield" />} title="Two-step sign-in" sub="A code from your phone at every sign-in" onPress={go("/m/security")} />
         <Item title="Your account" sub={`${m.name} · ${m.email}`} onPress={go("/m/account")} />
         <Item title="Calendar sync" sub={!sync ? (data?.sync.error && !data.sync.denied ? data.sync.error : "Your bookings in your own calendar") : syncOn ? [sync.feed_url ? "Bookings shown in your calendar" : "", sync.cal_import_set ? "busy times read from it" : ""].filter(Boolean).join(" · ") : "Your bookings in your own calendar"} onPress={go("/m/calendar-sync")} right={sync ? <Tag kind={syncOn ? "ok" : "grey"}>{syncOn ? "On" : "Off"}</Tag> : undefined} />
         <Item title="Help & support" sub="Guides and how to reach LogaLuxe" web onPress={web("/help")} last />

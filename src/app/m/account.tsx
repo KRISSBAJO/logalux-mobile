@@ -2,7 +2,7 @@
 // Every team member can open this, whatever their role.
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
 import { Grp, Header, Tag, Wait, WebLink } from "@/components/mc-kit";
 import { Btn, Card, Failed, Field, Note, Row, Screen, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
@@ -10,6 +10,7 @@ import { plural, when } from "@/lib/format";
 import { ROLE, signedIn, soft } from "@/lib/mc-util";
 import { useSession } from "@/lib/session";
 import { useLoad } from "@/lib/use-load";
+import { c, f } from "@/lib/theme";
 
 export default function Account() {
   const s = useSession();
@@ -98,7 +99,7 @@ export default function Account() {
               {`You are signed in in ${plural(Number(sec.sessions ?? 0), "place")} now.`}
               {sec.last_login_at ? ` Last sign-in ${when(sec.last_login_at, m?.timezone)}.` : ""}
             </T>
-            <WebLink path="/business/settings?tab=account">{sec.two_step ? "Turn it off on the web" : "Turn it on with an authenticator app, on the web"}</WebLink>
+            <Pressable accessibilityRole="button" onPress={() => router.push("/m/security" as never)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ fontFamily: f.semi, fontSize: 14, color: c.wine }}>{sec.two_step ? "Manage or turn off" : "Turn it on with an authenticator app"}</Text></Pressable>
           </Card>
         )}
 

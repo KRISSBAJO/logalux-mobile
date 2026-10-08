@@ -26,7 +26,14 @@
       "expo-router",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "LogaLuxe opens your photos so you can add pictures of your work, your products and your documents.",
+          "cameraPermission": "LogaLuxe uses the camera so you can take pictures of your work, your products and your documents."
+        }
+      ]
     ],
     "scheme": "logaluxe"
   }

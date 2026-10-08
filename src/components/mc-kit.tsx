@@ -234,12 +234,12 @@ export function AskManager({ what, who = "a manager or the owner" }: { what: str
   );
 }
 
-/** A plain link that opens a page of the web app, with the words that say so. */
-export function WebLink({ children, path, style }: { children: ReactNode; path: string; style?: StyleProp<ViewStyle> }) {
+/** A plain link: to a screen of this app (`to`), or to a page of the web app (`path`), with the arrow that says which. */
+export function WebLink({ children, path, to, style }: { children: ReactNode; path?: string; to?: string; style?: StyleProp<ViewStyle> }) {
   return (
-    <Pressable accessibilityRole="link" onPress={() => openWeb(path)} style={({ pressed }) => [{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 8, opacity: pressed ? 0.7 : 1 }, style]}>
+    <Pressable accessibilityRole={to ? "button" : "link"} onPress={() => { if (to) router.push(to as never); else if (path) void openWeb(path); }} style={({ pressed }) => [{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 8, opacity: pressed ? 0.7 : 1 }, style]}>
       <Text style={{ flexShrink: 1, fontFamily: f.semi, fontSize: 13, color: c.wine }}>{children}</Text>
-      <McIcon name="external" size={14} color={c.wine} />
+      {to ? <Icon name="next" size={14} color={c.wine} /> : <McIcon name="external" size={14} color={c.wine} />}
     </Pressable>
   );
 }

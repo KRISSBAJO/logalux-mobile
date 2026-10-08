@@ -29,15 +29,19 @@ Client side (`/client/*` tabs, other screens under `/c/*`):
 - Inbox and chat with a business
 - Account: details and password, saved businesses and products, wallet and store credit
 
-Business side (`/business/*` tabs, other screens under `/m/*`):
+Business side (`/business/*` tabs, other screens under `/m/*`). Every tool a business has on the web is in the app:
 
 - Today, with the day's bookings and each step of a visit (check in, start, finish)
-- Calendar by day, week and staff, with blocked time
-- New booking for a call or a walk-in
+- Calendar by day, week and staff, with blocked time; new booking for a call or a walk-in
 - Checkout: services, products, tips, discounts, promo codes, points, pay links
-- Clients, with history and notes
-- Inbox: messages and problem reports
-- Money, services, hours and policies, calendar sync, sharing the booking link
+- Clients with history and notes, the waitlist, and the inbox (messages and problem reports)
+- Profile and portfolio: what clients read, logo, photos from the phone, reviews and replies, QR code and website button
+- Staff and chairs: the team, each person's services, hours, breaks, time off, pay, chair rental, rooms, sign-ins and roles, and the week's roster
+- Inventory: products, stock changes and counts, suppliers, purchase orders; online orders step by step; returns
+- Marketing: campaigns, automatic messages, promo codes, loyalty points, and the new clients LogaLuxe brought with what each cost
+- Money: balance, payout account, monthly statements, plan and billing, reports with charts
+- Services, packages, memberships, pricing rules, questions at booking, hours and policies
+- Settings: business details, locations, tax, booking page rules, notifications, two-step sign-in, calendar sync
 - Sign-up and the setup checklist, including verification documents
 
 ## How it is put together
@@ -45,12 +49,13 @@ Business side (`/business/*` tabs, other screens under `/m/*`):
 - `src/app/` holds the routes. Files in `client/` and `business/` are tabs; everything else opens above the tabs.
 - `src/lib/session.tsx` keeps the two sign-ins (client and business) in the phone's secure storage.
 - `src/lib/api.ts` is the one place that calls the API. `src/lib/theme.ts` holds colours and fonts.
-- `src/components/ui.tsx` is the shared kit. Files with a two-letter prefix (`ca-`, `cb-`, `cc-`, `ma-`, `mb-`, `mc-`) belong to one group of screens.
+- `src/components/ui.tsx` is the shared kit. Files with a two-letter prefix (`ca-` to `cc-` for the client side, `ma-` to `mi-` for the business side) belong to one group of screens.
 - `design/` holds the designs the screens were built from.
 
 ## Things to know
 
 - Sign-in is by email and password. The designs show a texted code; texts are switched off in this product for now.
 - Payment happens on Stripe's or Paystack's own page, opened in the phone's browser. The app never sees a card.
-- Some business tools open on the website: profile and photos, staff, inventory, marketing, reports, payouts.
+- Bank details are entered on the provider page (Stripe), or for Nigeria exactly as the web does it. Only help pages open the website.
+- Spreadsheet exports are shared as text on a phone; sharing a real file needs `expo-sharing` and `expo-file-system`.
 - There are no push notifications yet. They need an Expo account and Apple and Google developer accounts, as do builds for phones and the stores.

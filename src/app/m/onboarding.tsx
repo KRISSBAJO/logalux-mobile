@@ -21,7 +21,7 @@ const KIND_ORDER = ["id", "licence", "address"];
 const MAX_DOCUMENTS = 10;
 
 /** Steps the phone has a screen for. Every other step opens the page the API names, on the web. */
-const PHONE: Record<string, string> = { services: "/m/services", address: "/m/hours" };
+const PHONE: Record<string, string> = { profile: "/m/profile", address: "/m/hours", services: "/m/services", staff: "/m/staff", photos: "/m/profile-photos", payout: "/m/payouts" };
 const SHORT: Record<string, string> = { profile: "your profile", address: "address and hours", services: "services", staff: "who does what", photos: "photos", payout: "payouts", verify: "your ID" };
 
 type Papers = "verified" | "waiting" | "needs_info" | "rejected" | "open";
@@ -199,7 +199,7 @@ export default function Onboarding() {
             </Row>
             <Row gap={8} style={{ marginTop: 10 }}>
               <SmallBtn kind="out" icon="share" style={{ flex: 1 }} onPress={() => shareText(`Book with ${m?.business} on LogaLuxe:`, link)}>Share</SmallBtn>
-              <SmallBtn kind="out" style={{ flex: 1 }} onPress={() => openWeb("/business/storefront#share")}>QR code, on the web</SmallBtn>
+              <SmallBtn kind="out" style={{ flex: 1 }} onPress={() => router.push("/m/qr" as never)}>QR code</SmallBtn>
             </Row>
           </>
         ) : null}

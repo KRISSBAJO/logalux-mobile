@@ -1,6 +1,6 @@
 // Money: what can be paid out, what is on hold, the payout account, and the ledger (design: M5-Money).
 // Everything is read from GET /v1/m/money, which is the owner's. Bank details are never typed into the app.
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -131,7 +131,7 @@ export default function Money() {
 
   const top = { paddingTop: insets.top + 12, paddingHorizontal: pad } as const;
   const statements = (
-    <Pressable accessibilityRole="link" accessibilityLabel="Statements. Opens on the web" onPress={() => openWeb("/business/money?tab=statements")} hitSlop={6}
+    <Pressable accessibilityRole="button" accessibilityLabel="Statements" onPress={() => router.push("/m/statements" as never)} hitSlop={6}
       style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: c.white, borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.8 : 1 })}>
       <McIcon name="doc" />
     </Pressable>
@@ -201,14 +201,14 @@ export default function Money() {
               style={({ pressed }) => ({ flex: 1, minHeight: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: c.gold, alignItems: "center", justifyContent: "center", opacity: !canPay ? 0.45 : pressed ? 0.85 : 1 })}>
               <Text style={{ fontFamily: f.semi, fontSize: 14, color: c.ink }}>Pay out now</Text>
             </Pressable>
-            <SmallBtn kind="ghost" onPress={() => openWeb("/business/money/payout-account")}>Account</SmallBtn>
+            <SmallBtn kind="ghost" onPress={() => router.push("/m/payouts" as never)}>Account</SmallBtn>
           </Row>
         ) : (
           <View style={{ marginTop: 14, gap: 8 }}>
-            <Pressable accessibilityRole="link" onPress={() => openWeb("/business/money/payout-account")} style={({ pressed }) => ({ minHeight: 44, borderRadius: 999, backgroundColor: c.gold, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.85 : 1 })}>
+            <Pressable accessibilityRole="button" onPress={() => router.push("/m/payouts" as never)} style={({ pressed }) => ({ minHeight: 44, borderRadius: 999, backgroundColor: c.gold, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.85 : 1 })}>
               <Text style={{ fontFamily: f.semi, fontSize: 14, color: c.ink }}>Set up payouts</Text>
             </Pressable>
-            <Text style={{ fontFamily: f.body, fontSize: 12, lineHeight: 17, color: mc.nightMuted }}>Opens on the web. Bank details are entered there or on {provider || "the payment provider"}&apos;s own page, never in this app.</Text>
+            <Text style={{ fontFamily: f.body, fontSize: 12, lineHeight: 17, color: mc.nightMuted }}>Takes a few minutes. You choose where your money is sent.</Text>
           </View>
         )}
         {account && !canPay ? <Text style={{ fontFamily: f.body, fontSize: 12, lineHeight: 17, color: mc.nightMuted, marginTop: 8 }}>{account.status !== "verified" ? "You can pay out once the account is verified." : "There is nothing to pay out yet. Money becomes available two days after a client pays."}</Text> : null}
@@ -272,7 +272,7 @@ export default function Money() {
           })}
         </Card>
       ) : <Empty title="No payouts yet">{account ? "The first one is sent once money has settled, two days after a client pays." : "Set up a payout account and your first payout follows once money has settled."}</Empty>}
-      <WebLink path="/business/money" style={{ marginTop: 8 }}>Statements, the full ledger and exports open on the web</WebLink>
+      <WebLink to="/m/statements" style={{ marginTop: 8 }}>Statements, month by month</WebLink>
     </View>
   );
 
@@ -320,7 +320,7 @@ export default function Money() {
           <Row between style={{ paddingVertical: 13 }}><T size={14} muted>Sent to</T><T size={14} weight="semi">{bank}</T></Row>
         </Card>
         <T size={13} muted>{simulated ? "Payments are in simulation here. The payout is recorded as paid at once, but no bank transfer is made." : `Sent to your bank through ${provider}, with no fee. It shows as scheduled, then being sent, then paid.`}</T>
-        <WebLink path="/business/money">Instant payouts, which carry a fee, are on the web</WebLink>
+        <WebLink to="/m/payouts">Instant payouts, which carry a fee</WebLink>
       </Sheet>
     </View>
   );

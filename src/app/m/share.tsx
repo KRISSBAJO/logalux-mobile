@@ -1,5 +1,6 @@
 // Share your booking page: the public link, to copy or to send through the phone's share sheet.
-// The QR code and the website snippets stay on the web (no QR drawing library is installed in the app).
+// The QR code and the website snippets have their own screen, /m/qr.
+import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { Grp, Header, Item, McIcon, SmallBtn, Wait } from "@/components/mc-kit";
@@ -48,7 +49,7 @@ export default function SharePage() {
 
       <Grp style={{ marginTop: 22 }}>More ways to share</Grp>
       <Card>
-        <Item last web title="QR code and website button" sub="Print the code, or add booking to your own site" onPress={() => openWeb("/business/storefront#share")} />
+        <Item last title="QR code and website button" sub="Show the code, or add booking to your own site" onPress={() => router.push("/m/qr" as never)} />
       </Card>
     </Screen>
   );

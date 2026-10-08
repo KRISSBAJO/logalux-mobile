@@ -1,5 +1,6 @@
 // Services and pricing: the menu, grouped the way clients see it (design: M9-Services).
 // Everyone on the team can read the menu; a manager or the owner changes it.
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, SectionList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -171,7 +172,11 @@ export default function Services() {
   const footer = !canEdit ? null : (
     <View style={{ marginTop: 16 }}>
       <Card>
-        <Item last web icon={<McIcon name="list" />} title="More pricing tools open on the web" sub="Packages, memberships, pricing rules, rooms and questions" onPress={() => openWeb("/business/services")} />
+        <Item icon={<McIcon name="gift" />} title="Packages" sub="Sets of visits paid for up front" onPress={() => router.push("/m/packages" as never)} />
+        <Item icon={<McIcon name="list" />} title="Memberships" sub="Monthly plans with discounts and included services" onPress={() => router.push("/m/memberships" as never)} />
+        <Item icon={<McIcon name="percent" />} title="Pricing rules" sub="Peak and quiet prices" onPress={() => router.push("/m/pricing-rules" as never)} />
+        <Item icon={<McIcon name="box" />} title="Rooms & chairs" sub="What a service needs besides a person" onPress={() => router.push("/m/staff/rooms" as never)} />
+        <Item last icon={<McIcon name="doc" />} title="Questions at booking" sub="What clients are asked when they book" onPress={() => router.push("/m/questions" as never)} />
       </Card>
     </View>
   );

@@ -2,6 +2,7 @@
 // `BusinessTile` is the narrow one in a sideways row on Home (design: Main).
 import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Icon, Row, T } from "@/components/ui";
 import { media } from "@/lib/api";
 import { bookAt, categoryLabel, slotLabel, type Biz, type Opening } from "@/lib/ca-data";
@@ -18,8 +19,24 @@ function Cover({ b, cover, height }: { b: Biz; cover?: string; height: number })
   const uri = media(cover);
   const label = categoryLabel(b.category);
   return (
-    <View style={{ height, backgroundColor: b.tone || c.photo, justifyContent: "flex-end" }}>
-      {uri ? <Image source={{ uri }} accessibilityLabel={`${b.name}, photo`} resizeMode="cover" style={StyleSheet.absoluteFill} /> : label ? <Text style={styles.caption}>{label}</Text> : null}
+    <View style={{ height, backgroundColor: b.tone || c.photo, justifyContent: "flex-end", overflow: "hidden" }}>
+      {uri ? <Image source={{ uri }} accessibilityLabel={`${b.name}, photo`} resizeMode="cover" style={StyleSheet.absoluteFill} /> : (
+        <>
+          {/* No photo yet: the business's own colour, lit from one corner, with its initial set large behind the caption. */}
+          <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none">
+            <Defs>
+              <LinearGradient id="lxCover" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.2} />
+                <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0} />
+                <Stop offset="1" stopColor="#000000" stopOpacity={0.28} />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill="url(#lxCover)" />
+          </Svg>
+          <Text style={[styles.monogram, { fontSize: height * 1.05, lineHeight: height * 1.1, bottom: -height * 0.2 }]}>{b.name.replace(/^the\s+/i, "").charAt(0).toUpperCase()}</Text>
+          {label ? <Text style={styles.caption}>{label}</Text> : null}
+        </>
+      )}
     </View>
   );
 }
@@ -108,6 +125,7 @@ export function BusinessTile({ b, cover, src = "", note }: { b: Biz; cover?: str
 const styles = StyleSheet.create({
   card: { backgroundColor: c.white, borderWidth: 1, borderColor: c.line, borderRadius: radius.card, overflow: "hidden" },
   tile: { width: 220, backgroundColor: c.white, borderWidth: 1, borderColor: c.line, borderRadius: 18, overflow: "hidden" },
+  monogram: { position: "absolute", right: 10, fontFamily: f.serifBold, color: "rgba(255,255,255,.13)" },
   caption: { fontFamily: f.medium, fontSize: 11, letterSpacing: 0.7, textTransform: "uppercase", color: "rgba(255,255,255,.6)", padding: 12 },
   rating: { position: "absolute", top: 10, left: 10, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: c.cream, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6 },
   promoted: { position: "absolute", top: 112, right: 10, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: "rgba(26,21,19,.82)" },

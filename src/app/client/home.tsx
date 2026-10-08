@@ -4,10 +4,11 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { BusinessTile, profileHref } from "@/components/ca-business-card";
+import { HeroCard, ListYours, SoonestList, type HeroPhoto } from "@/components/ca-home";
 import { Avatar, Btn, Card, Chip, Empty, Failed, Icon, IconButton, Loading, Pill, Row, Screen, Serif, T } from "@/components/ui";
 import { api, qs, type Row as Data } from "@/lib/api";
 import { CITIES, useCity } from "@/lib/ca-city";
-import { bookAt, CATEGORIES, loadCovers, loadOpenings, slotLabel, type Biz, type Opening, type Openings } from "@/lib/ca-data";
+import { bookAt, CATEGORIES, loadCovers, loadOpenings, type Biz, type Opening, type Openings } from "@/lib/ca-data";
 import { useSaved } from "@/lib/ca-saved";
 import { clock, dayShort, firstName, money, when } from "@/lib/format";
 import { useSession } from "@/lib/session";
@@ -45,12 +46,15 @@ export default function Home() {
   // The city's businesses: the best rated, and when each can next take a client.
   const town = useLoad(async () => {
     if (!city.ready) return null;
-    const [list, covers] = await Promise.all([api<{ businesses: Biz[]; total: number }>(`/businesses${qs({ market: city.market, limit: 30 })}`), loadCovers()]);
+    const [list, covers, heroes] = await Promise.all([api<{ businesses: Biz[]; total: number }>(`/businesses${qs({ market: city.market, limit: 30 })}`), loadCovers(),
+      api<{ media: HeroPhoto[] }>("/site/media?slot=hero").then((r) => r.media ?? []).catch(() => [] as HeroPhoto[])]);
     const top = [...(list.businesses ?? [])].sort((a, b) => Number(b.rating) - Number(a.rating) || Number(b.review_count) - Number(a.review_count)).slice(0, 10);
     const openings = await loadOpenings(top.map((b) => b.slug));
     const soonest = top.filter((b) => openings[b.slug]?.slots?.length)
       .sort((a, b) => new Date(openings[a.slug].slots[0].starts_at).getTime() - new Date(openings[b.slug].slots[0].starts_at).getTime());
-    return { top, soonest, openings, covers, total: list.total };
+    // One of the site's own photos for the banner, a different one each day.
+    const hero = heroes.length ? heroes[new Date().getDate() % heroes.length] : undefined;
+    return { top, soonest, openings, covers, total: list.total, hero };
   }, [city.market, city.ready]);
 
   // The signed-in client's own bookings: the next one, and the last visit in this city to book again.
@@ -135,6 +139,13 @@ export default function Home() {
 
       {saved.error ? <View style={{ paddingHorizontal: pad, marginTop: 14 }}><Failed error={saved.error} /></View> : null}
 
+      {/* Someone with a visit to rebook sees that card here instead. */}
+      {!last && town.data && town.data.top.length > 0 ? (
+        <View style={{ paddingHorizontal: pad, marginTop: 16 }}>
+          <HeroCard photo={town.data.hero} city={city.city} count={Number(town.data.total) || town.data.top.length} onPress={() => toSearch()} />
+        </View>
+      ) : null}
+
       {last ? (
         <View style={{ paddingHorizontal: pad, marginTop: 20 }}>
           <View style={{ backgroundColor: c.ink, borderRadius: 20, padding: 18, gap: 14 }}>
@@ -204,11 +215,15 @@ export default function Home() {
         <>
           <Shelf title={`Top rated in ${city.city}`} onSeeAll={() => toSearch()} items={town.data.top} render={(b) => <BusinessTile b={b} cover={town.data!.covers[b.slug]} src="app" />} />
           {town.data.soonest.length ? (
-            <Shelf title="Free soonest" items={town.data.soonest} render={(b) => {
-              const o = town.data!.openings[b.slug];
-              return <BusinessTile b={b} cover={town.data!.covers[b.slug]} src="app" note={`${slotLabel(o.slots[0].starts_at, b.timezone)} · ${o.service}`} />;
-            }} />
+            <View style={{ paddingHorizontal: pad, marginTop: 26 }}>
+              <Serif size={22}>Free soonest</Serif>
+              <T muted size={13} style={{ marginTop: 2, marginBottom: 12 }}>Tap a time to book it.</T>
+              <SoonestList items={town.data.soonest.slice(0, 5)} openings={town.data.openings} />
+            </View>
           ) : null}
+          <View style={{ paddingHorizontal: pad, marginTop: 26, marginBottom: 8 }}>
+            <ListYours onPress={() => router.push("/m/start" as never)} />
+          </View>
         </>
       ) : null}
     </Screen>

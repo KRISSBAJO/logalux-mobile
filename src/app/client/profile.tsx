@@ -1,3 +1,4 @@
+import { PushSettings } from "@/components/push-settings";
 // Account and wallet (design: C9-Account). Everything shown comes from the account: the design's
 
 // loyalty tier, beauty profile, family profiles, saved cards, reminder settings and language are left
@@ -221,7 +222,8 @@ export default function Profile() {
 
 
 
-      <Grp>At a glance</Grp>
+      <PushSettings />
+<Grp>At a glance</Grp>
 
       <Rows>
 

@@ -1,3 +1,4 @@
+import { PushSettings } from "@/components/push-settings";
 import { useFormReset } from "../../lib/form-reset";
 // Your own account on the business side: name, phone, password, and how two-step sign-in stands.
 // Every team member can open this, whatever their role.
@@ -71,7 +72,8 @@ export default function Account() {
         <Header title="Your account" />
         <T muted size={14} style={{ marginTop: 10 }}>{m ? `${ROLE[m.role] ?? m.role} at ${m.business}. You sign in with ${m.email}.` : ""}</T>
 
-        <Grp>Your details</Grp>
+        <PushSettings />
+<Grp>Your details</Grp>
         <View style={{ gap: 14 }}>
           {saved ? <Note kind={saved.kind}>{saved.text}</Note> : null}
           <Field label="Your name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" maxLength={80} />

@@ -1,3 +1,4 @@
+import { PushListener } from "@/components/push-listener";
 import { BodoniModa_500Medium, BodoniModa_500Medium_Italic, BodoniModa_600SemiBold } from "@expo-google-fonts/bodoni-moda";
 import { DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold } from "@expo-google-fonts/dm-sans";
 import { useFonts } from "expo-font";
@@ -14,6 +15,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
+        <PushListener />
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.cream } }} />
       </SessionProvider>

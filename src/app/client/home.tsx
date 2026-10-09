@@ -7,6 +7,7 @@ import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { BusinessTile, FirstHereTile, profileHref, tierLabel } from "@/components/ca-business-card";
 import { CountryBanner } from "@/components/ca-country-banner";
 import { HeroCard, ListYours, SoonestList, type HeroPhoto } from "@/components/ca-home";
+import { JournalSection } from "@/components/cj-home";
 import { PlaceButton, PlacePanel } from "@/components/ca-place-panel";
 import { Avatar, Btn, Card, Chip, Empty, Failed, Icon, IconButton, Loading, Pill, Row, Screen, Serif, T } from "@/components/ui";
 import { api, qs, type Row as Data } from "@/lib/api";
@@ -258,6 +259,7 @@ export default function Home() {
               <SoonestList items={t.soonest.slice(0, 5)} openings={t.openings} tag={tileTag} />
             </View>
           ) : null}
+          <JournalSection country={w.scope} />
           <View style={{ paddingHorizontal: pad, marginTop: 26, marginBottom: 8 }}>
             <ListYours onPress={() => router.push("/m/start" as never)} />
           </View>

@@ -124,6 +124,7 @@ export default function Profile() {
       <Grp>More</Grp>
       <Rows>
         {inviting ? <Item title="Invite a friend" sub={`You each get ${money(referral!.credit_cents, "USD")} of credit after their first visit or order`} onPress={() => router.push("/c/account/wallet" as never)} /> : null}
+        <Item title="Journal" sub="Articles on hair, braids, nails, skin and more, written for here" onPress={() => router.push("/c/journal" as never)} />
         <Item title="Details and password" sub={user.phone && user.phone_verified === false && ft.sms_login ? "Your mobile number is not confirmed yet" : "Your name, mobile number and password"} onPress={() => router.push("/c/account/details" as never)} />
         <Item icon="pin" title={w.source === "picked" || w.source === "device" ? "Forget my location" : "Where you are looking"} sub={w.place ? (w.source === "device" ? `Near you, around ${w.place.label}. Forget it and go back to our first guess` : w.source === "picked" ? `You chose ${w.place.label}. Forget it and go back to our first guess` : `${w.place.label}, our guess. Change it from the top of Home`) : "Not set yet"} onPress={() => { if (w.source === "picked" || w.source === "device") { void w.forget(); setSent({ kind: "ok", text: "Your location is forgotten. Home shows our first guess again." }); } else router.navigate("/client/home" as never); }} />
         <Item title="Help" sub="Answers, and how to write to us" onPress={() => web("/help")} />

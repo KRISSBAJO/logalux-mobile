@@ -167,18 +167,6 @@ export function PlacePanel({ open, onClose }: { open: boolean; onClose: () => vo
               {!q && !suggested.length && !own ? <T size={13} muted style={{ paddingHorizontal: 2, paddingVertical: 6 }}>Type a city, a state or a country.</T> : null}
             </View>
 
-            {/* Looking at another country on purpose: a gift for someone there, or a visit. */}
-            {!q && others.length ? others.map((x) => (
-              <Pressable key={x.code} accessibilityRole="button" accessibilityState={{ busy: busy === "country" }} disabled={busy === "country"} onPress={() => void other(x.code)}
-                style={({ pressed }) => ({ borderRadius: 14, backgroundColor: c.cream2, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 10, opacity: busy === "country" ? 0.6 : pressed ? 0.85 : 1 })}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: f.semi, fontSize: 14, color: c.ink }}>Shopping or booking for someone in {inCountry(x.code)}?</Text>
-                  <Text style={{ fontFamily: f.body, fontSize: 12.5, lineHeight: 17, color: c.muted, marginTop: 2 }}>Browse {inCountry(x.code)}. Prices are in {moneyName(x.code)}.</Text>
-                </View>
-                <Icon name="next" size={16} color={c.wine} />
-              </Pressable>
-            )) : null}
-
             {!q && (w.source === "picked" || w.source === "device" || w.denied) ? (
               <Pressable accessibilityRole="button" onPress={() => void forget()} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 2 }}>
                 <T size={13.5} weight="semi" muted>Forget my location</T>

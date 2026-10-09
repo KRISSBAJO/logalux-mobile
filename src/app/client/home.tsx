@@ -74,12 +74,12 @@ export default function Home() {
   // The signed-in client's own bookings: the next one, and the last visit in this country to book again.
   const mine = useLoad(async () => {
     if (!s.clientToken || !w.ready) return null;
-    const out = await s.capi<{ bookings: Data[] }>("/auth/me");
+    const [out, past] = await Promise.all([s.capi<{ bookings: Data[] }>("/auth/me?paged=1&scope=upcoming"), s.capi<{ bookings: Data[] }>("/auth/me?paged=1&scope=past")]);
     const now = Date.now(), all = out.bookings ?? [];
     const upcoming = all.filter((b) => ["requested", "confirmed"].includes(b.status) && new Date(b.starts_at).getTime() > now)
       .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] ?? null;
     // Newest first already. A visit that happened, at a business priced in the money of the country being browsed.
-    const last = all.find((b) => ["completed", "paid"].includes(b.status) && b.currency === currency && new Date(b.starts_at).getTime() < now) ?? null;
+    const last = (past.bookings ?? []).find((b) => ["completed", "paid"].includes(b.status) && b.currency === currency && new Date(b.starts_at).getTime() < now) ?? null;
     let opening: Opening | null = null;
     if (last) {
       const names = String(last.services ?? "").split(", ").filter(Boolean);

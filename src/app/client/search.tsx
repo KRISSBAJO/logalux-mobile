@@ -1,3 +1,4 @@
+import { useFormReset } from "../../lib/form-reset";
 // Search results (design: C2-Results). One query against GET /v1/businesses for the place the client is
 // looking in, inside their country, nearest first from a point, a page at a time as the person scrolls,
 // with each business's next free times and how far it is.
@@ -48,12 +49,12 @@ export default function Search() {
   const sortOk = SORTS.some(([v]) => v === sort) ? sort : "";
 
   // Arriving from Home with a category or a word: take it, even when this tab was already open.
-  useEffect(() => {
+  useFormReset([p.t, p.q, p.category], () => {
     if (p.t === undefined && p.q === undefined && p.category === undefined) return;
     const cat = CATEGORIES.some(([id]) => id === p.category) ? String(p.category) : "";
     const word = typeof p.q === "string" ? p.q : "";
     setCategory(cat); setText(word); setQ(word.trim());
-  }, [p.t, p.q, p.category]);
+  });
 
   // Search a moment after the typing stops, not on every letter.
   useEffect(() => {
@@ -87,7 +88,9 @@ export default function Search() {
 
   useEffect(() => {
     list.current?.scrollToOffset({ offset: 0, animated: false });
-    void load(0, "new");
+    let live = true;
+    queueMicrotask(() => { if (live) void load(0, "new"); });
+    return () => { live = false; };
   }, [load]);
 
   const hasMore = st.items.length < st.total;

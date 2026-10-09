@@ -239,10 +239,20 @@ export async function reload() {
 
 class Refused extends Error { denied = true; }
 
-// NATIVE: exact location on a phone needs the expo-location package, which is not installed.
-// After `npx expo install expo-location`, replace the `null` on the next line with the function in the comment under it.
-const NATIVE_POSITION: (() => Promise<Point>) | null = null;
-// const NATIVE_POSITION = async (): Promise<Point> => { const L = await import("expo-location"); if ((await L.requestForegroundPermissionsAsync()).status !== "granted") throw new Refused("denied"); const p = await L.getCurrentPositionAsync({ accuracy: L.Accuracy.Balanced }); return { lat: p.coords.latitude, lng: p.coords.longitude }; };
+// Foreground only: called after the person presses Use my exact location.
+const NATIVE_POSITION = async (): Promise<Point> => {
+  const L = await import("expo-location");
+  if (!(await L.hasServicesEnabledAsync())) throw new Error("Location services are off. Enable them in Settings, or choose a place.");
+  if ((await L.requestForegroundPermissionsAsync()).status !== "granted") throw new Refused("denied");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const p = await Promise.race([
+      L.getCurrentPositionAsync({ accuracy: L.Accuracy.Balanced }),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Getting your location took too long. Try again, or choose a place.")), 12000); }),
+    ]);
+    return { lat: p.coords.latitude, lng: p.coords.longitude };
+  } finally { clearTimeout(timer); }
+};
 
 function devicePosition(): Promise<Point> {
   if (Platform.OS === "web") {

@@ -55,7 +55,7 @@ export default function Inbox() {
   // The tab's badge is the number of unread messages in open conversations. When this screen sees a different number, the badge is reloaded.
   const unreadNow = listFilter === "open" && list.data ? threads.reduce((a, t) => a + Number(t.unread_business ?? 0), 0) : -1;
   const badge = Number(me?.badges?.inbox ?? 0);
-  useEffect(() => { if (unreadNow >= 0 && unreadNow !== badge) refreshBadge(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [unreadNow]);
+  useEffect(() => { if (unreadNow >= 0 && unreadNow !== badge) refreshBadge();   }, [unreadNow, badge, refreshBadge]);
 
   const chips = (
     <ChipRow style={{ marginTop: 14 }}>

@@ -1,9 +1,10 @@
+import { useFormReset } from "../../lib/form-reset";
 // Your own account on the business side: name, phone, password, and how two-step sign-in stands.
 // Every team member can open this, whatever their role.
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
-import { Grp, Header, Tag, Wait, WebLink } from "@/components/mc-kit";
+import { Grp, Header, Tag, Wait } from "@/components/mc-kit";
 import { Btn, Card, Failed, Field, Note, Row, Screen, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { plural, when } from "@/lib/format";
@@ -26,9 +27,9 @@ export default function Account() {
   const [current, setCurrent] = useState(""), [next, setNext] = useState(""), [again, setAgain] = useState("");
   const [pwBusy, setPwBusy] = useState(false), [pwNote, setPwNote] = useState<{ kind: "ok" | "bad"; text: string } | null>(null);
 
-  useEffect(() => {
+  useFormReset([data?.account], () => {
     if (data?.account) { setName(String(data.account.name ?? "")); setPhone(String(data.account.phone ?? "")); }
-  }, [data?.account]);
+  });
 
   const saveDetails = async () => {
     setSaving(true); setSaved(null);

@@ -2,7 +2,7 @@
 // signed in to either or both; `mode` is the side they are looking at.
 // Tokens are kept in the phone's secure storage (the keychain), never in plain storage.
 import * as SecureStore from "expo-secure-store";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Platform } from "react-native";
 import { api, ApiError, type Row } from "./api";
 
@@ -62,21 +62,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const load = useCallback(async (clientToken: string | null, businessToken: string | null) => {
     // A token the API no longer accepts is dropped; any other failure (no connection) keeps it for next time.
-    const who = async (path: string, token: string | null, key: string, pick: (r: Row) => Row) => {
+    const who = async (path: string, token: string | null, pick: (r: Row) => Row) => {
       if (!token) return { token: null, who: null };
       try {
         return { token, who: pick(await api(path, { token })) };
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) {
-          await store.set(key, null);
           return { token: null, who: null };
         }
         return { token, who: null };
       }
     };
     const [cl, bz] = await Promise.all([
-      who("/auth/me?brief=1", clientToken, KEYS.client, (r) => r.user),
-      who("/m/me", businessToken, KEYS.business, (r) => ({ ...r.merchant, badges: r.badges, businesses: r.businesses })),
+      who("/auth/me?brief=1", clientToken, (r) => r.user),
+      who("/m/me", businessToken, (r) => ({ ...r.merchant, badges: r.badges, businesses: r.businesses })),
     ]);
     return { clientToken: cl.token, customer: cl.who, businessToken: bz.token, merchant: bz.who };
   }, []);
@@ -129,20 +128,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signOut: async (which) => {
         const token = which === "client" ? s.clientToken : s.businessToken;
-        if (token) await api(which === "client" ? "/auth/logout" : "/m/logout", { method: "POST", token, body: {} }).catch(() => undefined);
-        await store.set(which === "client" ? KEYS.client : KEYS.business, null);
         setS((x) => (which === "client" ? { ...x, clientToken: null, customer: null } : { ...x, businessToken: null, merchant: null, mode: "client" }));
+        if (token) void api(which === "client" ? "/auth/logout" : "/m/logout", { method: "POST", token, body: {} }).catch(() => undefined);
+        const key = which === "client" ? KEYS.client : KEYS.business;
+        if (await store.get(key) === token) await store.set(key, null);
       },
       refresh: async () => {
         const got = await load(s.clientToken, s.businessToken);
-        setS((x) => ({ ...x, ...got }));
+        setS((x) => x.clientToken === s.clientToken && x.businessToken === s.businessToken ? { ...x, ...got } : x);
       },
-      capi: (path, opts = {}) => api(path, { ...opts, token: s.clientToken }),
+      capi: async (path, opts = {}) => {
+        try { return await api(path, { ...opts, token: s.clientToken }); }
+        catch (e) {
+          if (e instanceof ApiError && e.status === 401 && s.clientToken) {
+            setS(x => x.clientToken === s.clientToken ? { ...x, clientToken: null, customer: null } : x);
+            if (await store.get(KEYS.client) === s.clientToken) await store.set(KEYS.client, null);
+          }
+          throw e;
+        }
+      },
       mapi: (path, opts = {}) => api("/m" + path, { ...opts, token: s.businessToken }),
     };
   }, [s, load]);
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}><Fragment key={`${s.clientToken ?? "guest"}:${s.businessToken ?? "guest"}`}>{children}</Fragment></Ctx.Provider>;
 }
 
 export function useSession(): Session {

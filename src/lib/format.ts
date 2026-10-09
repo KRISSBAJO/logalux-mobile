@@ -47,4 +47,4 @@ export function duration(mins: number): string {
 
 export const plural = (n: number, one: string, many = one + "s") => `${n} ${n === 1 ? one : many}`;
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-export const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? "";
+export const firstName = (name?: string | null) => (name ?? "").trim().split(/\s+/)[0] ?? "";

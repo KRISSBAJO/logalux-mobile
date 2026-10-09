@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // A 6-digit code sent to a phone: the six boxes of the sign-in design (A1-SignIn), the wait before
 // a new code can be asked for, and the small piece that confirms the number on an account.
 import { useEffect, useRef, useState } from "react";
@@ -88,7 +89,7 @@ export function PhoneConfirm({ saved, typed, confirmed, whatsapp }: { saved: str
   const wait = useWait(30);
   const via = whatsapp ? channel : "sms";
   // A different number is a different job: what was typed for the old one is dropped.
-  useEffect(() => { setOpen(false); setCode(""); setSaid(null); }, [saved]);
+  useFormReset([saved], () => { setOpen(false); setCode(""); setSaid(null); });
 
   if (!saved) return null;
   if (confirmed) return <Row gap={8}><Pill kind="ok">Number confirmed</Pill>{said?.kind === "ok" ? <T size={13} muted style={{ flex: 1 }}>{said.text}</T> : null}</Row>;

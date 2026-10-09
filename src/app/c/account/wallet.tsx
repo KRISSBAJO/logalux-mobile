@@ -1,3 +1,4 @@
+import { usePlace } from "@/lib/ca-place";
 // Wallet (opened from Account): store credit, and the packages, memberships and points the client holds
 // at each business. The invitation card shows only while LogaLuxe has the programme switched on, and
 // "Saved cards" only while an admin has saved cards switched on.
@@ -25,18 +26,20 @@ const dateOnly = (v: unknown) => day(String(v).slice(0, 10) + "T12:00:00Z");
 
 export default function Wallet() {
   const s = useSession();
+  const where = usePlace();
+  const currency = where.scope === "NG" ? "NGN" : "USD";
   const [shared, setShared] = useState("");
   const kept = useCards();
 
   const q = useLoad(async () => {
     if (!s.clientToken) return null;
     const [w, r] = await Promise.all([
-      s.capi<{ wallet: Data[]; credit_cents?: number }>("/auth/wallet"),
+      s.capi<{ wallet: Data[]; credit_cents?: number; credit_balances?: Record<string,number> }>("/auth/wallet"),
       // The invitation is an extra: if it cannot be read, the wallet still shows.
       s.capi<Data>("/auth/referral").catch(() => null),
     ]);
-    return { wallet: w.wallet ?? [], credit: Number(w.credit_cents ?? r?.balance_cents) || 0, referral: r };
-  }, [s.clientToken]);
+    return { wallet: w.wallet ?? [], credit: Number(w.credit_balances?.[currency] ?? (currency === "USD" ? w.credit_cents ?? r?.balance_cents : 0)) || 0, referral: r, balances: w.credit_balances ?? {USD:Number(w.credit_cents)||0,NGN:0} };
+  }, [s.clientToken, currency]);
   useRefocus(() => { if (s.clientToken) q.refresh(); });
 
   if (!s.ready) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
@@ -70,11 +73,14 @@ export default function Wallet() {
     <Screen onRefresh={() => { q.refresh(); void kept.reload(); }} refreshing={q.refreshing}>
       <BackTitle title="Wallet" />
 
+      {!s.customer?.phone_verified ? <Note>Confirm your phone number in Account details to see your packages, memberships, and loyalty points.</Note> : null}
+
       {showCredit ? (
         <View style={{ marginTop: 18, backgroundColor: c.wine, borderRadius: 20, padding: 16, gap: 4 }}>
           <Text style={{ fontFamily: f.semi, fontSize: 11, letterSpacing: 0.44, textTransform: "uppercase", color: "#F1D9DC" }}>Store credit</Text>
-          <Text style={{ fontFamily: f.bold, fontSize: 30, color: "#F4ECE3" }}>{money(credit, "USD")}</Text>
-          <Text style={{ fontFamily: f.body, fontSize: 13, lineHeight: 18, color: "#F1D9DC", marginTop: 4 }}>Credit is in US dollars. It comes off your next shop order in dollars by itself, after any promo code or gift card. It is not used on an order in naira.</Text>
+          <Text style={{ fontFamily: f.bold, fontSize: 30, color: "#F4ECE3" }}>{money(credit, currency)}</Text>
+          {Object.entries(q.data?.balances ?? {}).filter(([code,amount]) => code !== currency && Number(amount)>0).map(([code,amount]) => <T key={code} size={14} color="#F4ECE3">Also {money(Number(amount),code)} in {code}</T>)}
+          <Text style={{ fontFamily: f.body, fontSize: 13, lineHeight: 18, color: "#F1D9DC", marginTop: 4 }}>Matching-currency credit comes off your shop order automatically. Dollar and naira balances stay separate.</Text>
         </View>
       ) : null}
 
@@ -88,7 +94,7 @@ export default function Wallet() {
                   <T size={14}>{String(h.reason)}</T>
                   <T size={12} muted>{day(h.created_at)}</T>
                 </View>
-                <T size={14} weight="semi" color={h.amount_cents < 0 ? c.muted : c.ok}>{h.amount_cents < 0 ? `-${money(-h.amount_cents, "USD")}` : `+${money(h.amount_cents, "USD")}`}</T>
+                <T size={14} weight="semi" color={h.amount_cents < 0 ? c.muted : c.ok}>{h.amount_cents < 0 ? `-${money(-h.amount_cents, h.currency || "USD")}` : `+${money(h.amount_cents, h.currency || "USD")}`}</T>
               </Row>
             ))}
           </Card>

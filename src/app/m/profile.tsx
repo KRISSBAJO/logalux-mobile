@@ -4,7 +4,7 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { Image, Linking, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { AskManager, Grp, Header, Item, McIcon, SetRow, Sheet, SmallBtn, Sw, Tag, Val, Wait, WebLink, mc } from "@/components/mc-kit";
+import { AskManager, Grp, Header, Item, SetRow, Sheet, SmallBtn, Sw, Tag, Val, Wait, WebLink, mc } from "@/components/mc-kit";
 import { Bar, BigChoice, MdIcon, PhotoSource, Shot, ShotTag, Tick, said, useSaid } from "@/components/md-kit";
 import { Btn, Card, Failed, Field, Icon, Label, Note, Row, Screen, T } from "@/components/ui";
 import { media, type Row as Data } from "@/lib/api";

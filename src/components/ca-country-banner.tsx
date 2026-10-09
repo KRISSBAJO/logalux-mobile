@@ -10,7 +10,7 @@ export function CountryBanner({ style }: { style?: StyleProp<ViewStyle> }) {
   if (!w.abroad) return null;
   return (
     <View accessibilityRole="alert" style={[{ borderRadius: 14, backgroundColor: c.goldBg, paddingHorizontal: 14, paddingVertical: 10, gap: 4 }, style]}>
-      <T size={13.5} color={c.goldInk}>You are browsing <T size={13.5} weight="semi" color={c.goldInk}>{inCountry(w.scope)}</T>. Prices are in {moneyName(w.scope)}, and that is what you pay in.</T>
+      <T size={13.5} color={c.goldInk}>You are browsing <T size={13.5} weight="semi" color={c.goldInk}>{inCountry(w.scope)}</T>. Local listings are priced in {moneyName(w.scope)}. Existing bookings, orders and credit keep their own currency.</T>
       <Pressable accessibilityRole="button" onPress={() => void w.forget()} hitSlop={8} style={{ minHeight: 32, justifyContent: "center", alignSelf: "flex-start" }}>
         <T size={13.5} weight="semi" color={c.wine}>Back to {inCountry(w.home)}</T>
       </Pressable>

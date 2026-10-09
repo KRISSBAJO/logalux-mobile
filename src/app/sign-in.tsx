@@ -1,9 +1,11 @@
+import { usePlace } from "@/lib/ca-place";
+import { useFormReset } from "../lib/form-reset";
 // The one sign-in screen both sides share (design: A1-SignIn).
 // A client signs in with an email and password, and, while an admin has "Sign in with a texted code"
 // switched on, with a 6-digit code sent to their phone: the three steps of the design (number, code,
 // name). A business always signs in with its password and, if it has one, its two-step code.
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { CodeBoxes, CodeLink, mmss, notSent, useWait } from "@/components/mp-code";
 import { Btn, Chip, Field, Icon, Loading, Note, Pill, Row, Screen, Serif, T } from "@/components/ui";
@@ -15,14 +17,15 @@ import { c, f, radius } from "@/lib/theme";
 type Side = "client" | "business";
 type Step = "phone" | "code" | "name";
 type Via = "sms" | "whatsapp";
-const CODES = ["+1", "+234"] as const;
+type DialCode = "+1" | "+234";
 
 export default function SignIn() {
   const p = useLocalSearchParams<{ side?: string; next?: string; ref?: string }>();
   const s = useSession();
+  const where = usePlace();
   const ft = useFeatures();
   const [side, setSide] = useState<Side>(p.side === "business" ? "business" : "client");
-  useEffect(() => { setSide(p.side === "business" ? "business" : "client"); }, [p.side]);
+  useFormReset([p.side], () => { setSide(p.side === "business" ? "business" : "client"); });
   const [creating, setCreating] = useState(!!p.ref);
   const [email, setEmail] = useState(""), [password, setPassword] = useState(""), [code, setCode] = useState("");
   const [first, setFirst] = useState(""), [last, setLast] = useState(""), [phone, setPhone] = useState("");
@@ -32,8 +35,9 @@ export default function SignIn() {
   // ----- a texted code (clients only, and only while it is switched on) -----
   const [way, setWay] = useState<"code" | "email" | null>(null);
   const [step, setStep] = useState<Step>("phone");
-  const [cc, setCc] = useState<(typeof CODES)[number]>("+1");
+  const [cc, setCc] = useState<DialCode>(where.scope === "NG" ? "+234" : "+1");
   const [number, setNumber] = useState("");
+  useFormReset([where.scope], () => { if (!number && step === "phone") setCc(where.scope === "NG" ? "+234" : "+1"); });
   const [via, setVia] = useState<Via>("sms");
   const [sentTo, setSentTo] = useState(""), [sentHow, setSentHow] = useState("");
   const [otp, setOtp] = useState("");
@@ -224,7 +228,7 @@ export default function SignIn() {
                   <View style={{ flex: 1 }}><Field label="First name" value={first} onChangeText={setFirst} autoComplete="given-name" textContentType="givenName" /></View>
                   <View style={{ flex: 1 }}><Field label="Last name" value={last} onChangeText={setLast} autoComplete="family-name" textContentType="familyName" /></View>
                 </Row>
-                <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 615 555 0144" hint="With the country code. The business uses it to reach you about a booking." />
+                <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder={where.scope === "NG" ? "+234 800 000 0000" : "+1 615 555 0144"} hint="With the country code. The business uses it to reach you about a booking." />
               </>
             ) : null}
             <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="emailAddress" />

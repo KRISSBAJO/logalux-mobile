@@ -37,8 +37,8 @@ export default function Review() {
 
   const q = useLoad(async () => {
     if (!s.clientToken) return null;
-    const me = await s.capi<{ bookings: Data[] }>("/auth/me");
-    const b = (me.bookings ?? []).find((x) => x.id === id);
+    const me = await s.capi<{ booking: Data }>(`/auth/bookings/${id}`);
+    const b = me.booking;
     if (!b) throw new Error("We could not find that visit in your account.");
     return b;
   }, [id, s.clientToken]);
@@ -124,8 +124,8 @@ export default function Review() {
     // The review's id comes with the account; the photos chosen earlier go to it now.
     let payUrl = "";
     try {
-      const me = await s.capi<{ bookings: Data[] }>("/auth/me");
-      const reviewId = (me.bookings ?? []).find((x) => x.id === id)?.review_id as string | undefined;
+      const me = await s.capi<{ booking: Data }>(`/auth/bookings/${id}`);
+      const reviewId = me.booking?.review_id as string | undefined;
       let failed = 0, why = "";
       for (const a of picked) {
         if (!reviewId) { failed++; continue; }

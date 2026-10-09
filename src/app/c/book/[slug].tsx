@@ -1,3 +1,4 @@
+import { useFormReset } from "@/lib/form-reset";
 // Booking a visit: choose a time, confirm (and pay the deposit on the provider's page), and the confirmation.
 // Opened as /c/book/<slug>?services=<ids>&staff=<id|any>&date=<YYYY-MM-DD>&time=<HH:MM>&src=<search|…>.
 // What has been chosen lives in the address, so a reload (or signing in half way) comes back to the same place.
@@ -106,10 +107,10 @@ function Flow({ data, reloadBiz }: { data: Loaded; reloadBiz: () => void }) {
   const slot = time && times.ready ? times.slots.find((s) => s.time === time) ?? null : null;
 
   const [notice, setNotice] = useState("");
+  useFormReset([times.ready, times.failed, time, slot, date], () => { if (times.ready && !times.failed && time && !slot) setNotice(`${time} on ${dayLabel(date)} is no longer free. Choose another time.`); });
   // A time in the address that is no longer free (an old link, or someone else took it).
   useEffect(() => {
     if (times.ready && !times.failed && time && !slot) {
-      setNotice(`${time} on ${dayLabel(date)} is no longer free. Choose another time.`);
       set({ time: null, step: null });
     }
   }, [times, time, slot, date, set]);

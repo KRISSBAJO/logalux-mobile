@@ -1,3 +1,4 @@
+import { useFormReset } from "@/lib/form-reset";
 // Pricing rules: prices that go up or down by service, day, time, level and date, and a check of what
 // one booking would cost (the web: Services, Pricing rules). Rules come from GET /v1/m/menu; the check
 // asks GET /v1/m/price-check. Everyone on the team can read them; a manager or the owner changes them.
@@ -54,10 +55,10 @@ export default function PricingRules() {
   const service = ckService || String(services[0]?.id ?? ""), person = ckStaff || String(staff[0]?.id ?? "");
   const rulesKey = JSON.stringify((data?.rules ?? []).map((r) => [r.id, r.active, r.adjust_value, r.adjust_kind, r.days, r.from_time, r.to_time, r.level, r.service_id, r.starts_on, r.ends_on]));
 
+  useFormReset([tab, service, person, ckDay, ckTime, rulesKey, s.businessToken], () => { setCkBusy(tab === "check" && !!service && !!person && !!s.businessToken); setCkError(""); setAnswer(null); });
   useEffect(() => {
     if (tab !== "check" || !service || !person || !s.businessToken) return;
     let open = true;
-    setCkBusy(true); setCkError("");
     s.mapi<{ menu_cents: number; price_cents: number; rules: string[] }>("/price-check" + qs({ service, staff: person, at: `${ckDay}T${ckTime}` }))
       .then((out) => { if (open) { setAnswer(out); setCkBusy(false); } })
       .catch((e: Error) => { if (open) { setAnswer(null); setCkError(e.message || "Could not work that out."); setCkBusy(false); } });

@@ -1,6 +1,7 @@
+import { useFormReset } from "../../../lib/form-reset";
 // Sales tax on retail products. It is part of the business profile (PUT /v1/m/settings/profile),
 // so the rest of the profile is sent back unchanged. Nigeria has none.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { Grp, mc } from "@/components/mc-kit";
 import { Gate, Night, NightLabel, Page, backTo } from "@/components/mi-kit";
@@ -23,7 +24,7 @@ export default function SalesTax() {
 
   const b = data && data !== DENIED ? (data.business as Data) : null;
   const saved = Number(b?.sales_tax_bp ?? 0) / 100;
-  useEffect(() => { if (b) setPct(String(saved)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [data]);
+  useFormReset([data], () => { if (b) setPct(String(saved));   });
 
   if (!b) return <Gate title="Sales tax" onBack={back} denied={data === DENIED} what="Sales tax is set by a manager or the owner." error={error} onRetry={reload} />;
 

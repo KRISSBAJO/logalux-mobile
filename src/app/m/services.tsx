@@ -8,7 +8,7 @@ import { Grp, Header, Item, McIcon, Sheet, SmallBtn, Sw, Tag, Wait, piece } from
 import { Avatar, Btn, Card, Chip, Empty, Failed, Field, Label, Note, Row, T } from "@/components/ui";
 import { type Row as Data } from "@/lib/api";
 import { duration, firstName, money, plural } from "@/lib/format";
-import { ask, major, openWeb, signedIn, symbol, toCents, toInt } from "@/lib/mc-util";
+import { ask, major, signedIn, symbol, toCents, toInt } from "@/lib/mc-util";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";

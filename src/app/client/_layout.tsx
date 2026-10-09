@@ -12,7 +12,7 @@ export default function ClientTabs() {
   // Messages waiting from businesses, for the Inbox tab. Counted when the person moves between
   // tabs and once a minute; a guest has none.
   useEffect(() => {
-    if (!s.clientToken) { setUnread(0); return; }
+    if (!s.clientToken) return;
     let live = true;
     const count = () => s.capi<{ threads?: { unread_client?: number }[] }>("/auth/threads")
       .then((r) => { if (live) setUnread((r.threads ?? []).reduce((n, t) => n + Number(t.unread_client ?? 0), 0)); })
@@ -27,10 +27,10 @@ export default function ClientTabs() {
     { name: "home", label: "Home", icon: "home" },
     { name: "search", label: "Search", icon: "search" },
     { name: "bookings", label: "Bookings", icon: "calendar" },
-    { name: "inbox", label: "Inbox", icon: "chat", badge: unread },
+    { name: "inbox", label: "Inbox", icon: "chat", badge: s.clientToken ? unread : 0 },
     { name: "profile", label: "Profile", icon: "user" },
-  ]), [unread]);
+  ]), [unread, s.clientToken]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return <Tabs screenOptions={{ headerShown: false }} tabBar={(p: any) => <TabBar {...p} />} />;
 }

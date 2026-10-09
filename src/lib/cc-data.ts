@@ -18,7 +18,7 @@ const STATES: Record<string, [string, PillKind]> = {
   completed: ["Completed", "grey"], paid: ["Completed", "grey"], cancelled_client: ["Cancelled by you", "grey"], cancelled_business: ["Cancelled by the business", "wine"],
   no_show: ["Missed", "wine"], rescheduled: ["Moved", "grey"],
 };
-export const bookingState = (status: string): [string, PillKind] => STATES[status] ?? [status, "grey"];
+export const bookingState = (status: string, endsAt?: string): [string, PillKind] => endsAt && ACTIVE.includes(status) && new Date(endsAt).getTime() <= Date.now() ? ["Awaiting business update", "gold"] : STATES[status] ?? [status, "grey"];
 
 /** The two lines of a date tile: "SAT" over "10" this week, "OCT" over "24" further away. */
 export function tile(iso: string, tz?: string): { top: string; day: string } {

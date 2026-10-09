@@ -1,3 +1,4 @@
+import { useFormReset } from "@/lib/form-reset";
 // A booking taken by phone, by message or at the desk (design: M13-NewBooking). The steps the web's
 // "New booking" sheet has: who, what, a free time with a person, a note, then POST /m/bookings.
 import { Redirect, router, useLocalSearchParams } from "expo-router";
@@ -55,10 +56,12 @@ export default function NewBooking() {
     if (data?.pre && !took.current) { took.current = true; setClient({ id: data.pre.id, name: data.pre.name, phone: data.pre.phone ?? "", sub: subOf(data.pre, tz) }); }
   }, [data, tz]);
 
+  useFormReset([find], () => { setFound(null); setFindError(""); });
+
   // Find a client by name or phone while typing.
   useEffect(() => {
     const q = find.trim();
-    if (q.length < 2) { setFound(null); setFindError(""); return; }
+    if (q.length < 2) return;
     let open = true;
     const timer = setTimeout(() => {
       s.mapi<{ clients?: Data[] }>("/clients" + qs({ q }))
@@ -69,7 +72,7 @@ export default function NewBooking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [find, s.businessToken]);
 
-  const services = data?.services ?? [];
+  const services = useMemo(() => data?.services ?? [], [data]);
   const picked = useMemo(() => services.filter((x) => chosen.includes(x.id)), [services, chosen]);
   const total = picked.reduce((a, x) => a + x.price, 0), mins = picked.reduce((a, x) => a + x.minutes, 0);
   // Pricing rules can make a time or a person dearer: the price of the chosen time is the one that counts.

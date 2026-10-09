@@ -1,3 +1,4 @@
+import { useFormReset } from "../../../lib/form-reset";
 // Joining a business's waitlist for days that are full (design: C10-Waitlist).
 // Opened as /c/waitlist/<slug>?services=<ids>&staff=<id>&date=<YYYY-MM-DD>.
 // The design promises a WhatsApp message and a slot held for 15 minutes. Neither exists: the business sees the
@@ -6,7 +7,7 @@
 // for a number with a country code, does the screen say so. There is no call to leave the list either,
 // so that button is left out.
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, type ScrollView } from "react-native";
 import { BizMark, Cta, Grp, Head, Icon, Shell } from "@/components/cb-ui";
 import { Btn, Card, Empty, Failed, Field, Loading, Note, T } from "@/components/ui";
@@ -47,12 +48,12 @@ export default function Waitlist() {
   // The day they came from is the one they wanted.
   const hours = biz?.place.hours;
   const closed = (d: string) => d > lastDay || (!!hours && !hours[DOW_KEYS[weekdayOf(d)]]);
-  useEffect(() => { if (asked && !closed(asked)) setPicked((x) => (x.length ? x : [asked])); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [asked, hours]);
-  useEffect(() => {
+  useFormReset([asked, hours], () => { if (asked && !closed(asked)) setPicked((x) => (x.length ? x : [asked]));   });
+  useFormReset([s.customer], () => {
     if (!s.customer) return;
     setName((x) => x || `${s.customer!.first_name ?? ""} ${s.customer!.last_name ?? ""}`.trim());
     setPhone((x) => x || String(s.customer!.phone ?? ""));
-  }, [s.customer]);
+  });
 
   if (!data || !biz) {
     return <Shell side={24}><Head title="Join the waitlist" onBack={back} /><View style={{ marginTop: 18 }}>{q.loading ? <Loading /> : <Failed error={q.error || "We could not load this business."} onRetry={q.reload} />}</View></Shell>;

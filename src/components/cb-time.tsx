@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // Step one of booking: who, which day, what time (design: C4-Time).
 // The days come a month at a time from the API and are shown a week at a time, as the design draws them.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -42,7 +43,7 @@ export function CbTime(p: Props) {
 
   // ----- the week on show -----
   const [week, setWeek] = useState(mondayOf(date || today));
-  useEffect(() => { if (date) setWeek(mondayOf(date)); }, [date]);
+  useFormReset([date], () => { if (date) setWeek(mondayOf(date)); });
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(week, i)), [week]);
   useEffect(() => {
     for (const m of new Set([weekDays[0].slice(0, 7), weekDays[6].slice(0, 7)])) if (m >= today.slice(0, 7) && m <= lastDay.slice(0, 7)) void getMonth(m);
@@ -61,8 +62,9 @@ export function CbTime(p: Props) {
 
   // With no day chosen yet, start on the first one that has room, looking as far ahead as the business allows.
   const [nothing, setNothing] = useState(false);
+  useFormReset([date], () => { setNothing(false); });
   useEffect(() => {
-    if (date) { setNothing(false); return; }
+    if (date) return;
     let live = true;
     (async () => {
       for (let m = today.slice(0, 7); m <= lastDay.slice(0, 7); m = shiftMonth(m, 1)) {

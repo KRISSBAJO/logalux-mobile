@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // The place panel: where the client is looking, and every way to change it. Typing offers places we
 // already know, with no outside call; "Search" asks the lookup service for any city or town in the United
 // States or Nigeria. "Use my exact location" is the only thing that asks the device where it is, and only
@@ -7,7 +8,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, Sc
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Btn, Card, Icon, IconButton, Row, Serif, T } from "@/components/ui";
 import { api, qs } from "@/lib/api";
-import { inCountry, moneyName, people, placeName, usePlace, type Place } from "@/lib/ca-place";
+import { inCountry, people, placeName, usePlace, type Place } from "@/lib/ca-place";
 import { c, f, pad, radius } from "@/lib/theme";
 
 type Found = { places: Place[]; looked_up?: boolean; complete?: boolean };
@@ -41,7 +42,7 @@ export function PlacePanel({ open, onClose }: { open: boolean; onClose: () => vo
   const asked = useRef(0);
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null); // the type-ahead waiting to run, dropped when Search is pressed
 
-  useEffect(() => { if (open) { setText(""); setFound(null); setNote(""); setBusy(""); } }, [open]);
+  useFormReset([open], () => { if (open) { setText(""); setFound(null); setNote(""); setBusy(""); } });
 
   /** Ask for places. `lookup` also asks the outside service; it is sent only when the person presses Search. */
   const ask = useCallback(async (q: string, lookup: boolean) => {
@@ -60,11 +61,12 @@ export function PlacePanel({ open, onClose }: { open: boolean; onClose: () => vo
     }
   }, []);
 
+  useFormReset([text, open], () => { setFound(null); setBusy(""); setNote(""); });
   // As the person types: places we already know. A short pause first, so every key is not a request.
   useEffect(() => {
     if (!open) return;
     const q = text.trim();
-    if (!q) { asked.current++; setFound(null); setBusy(""); setNote(""); return; }
+    if (!q) { asked.current++; return; }
     const t = setTimeout(() => { pending.current = null; void ask(q, false); }, 180);
     pending.current = t;
     return () => clearTimeout(t);
@@ -94,7 +96,6 @@ export function PlacePanel({ open, onClose }: { open: boolean; onClose: () => vo
   const suggested = w.places.filter((p) => !w.scope || p.country === w.scope).slice(0, 8);
   const list = q ? found?.places ?? [] : suggested;
   const own = w.countries.find((x) => x.code === w.scope);
-  const others = w.countries.filter((x) => x.code !== w.scope);
   const recent = q ? [] : w.recent.filter((r) => r.label !== w.place?.label);
   const how = w.source === "ip" ? <>We think you are near <T size={13} weight="semi">{shown}</T>, going by your internet connection. It is a rough guess: choose your own place below.</>
     : w.source === "device" ? <>You are seeing what is near <T size={13} weight="semi">{shown}</T>, from your device&apos;s location.</>

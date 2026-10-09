@@ -57,7 +57,7 @@ export function LocationFields({ value: v, onChange, fixedCountry, error }: { va
   const [problem, setProblem] = useState("");
   const [byHand, setByHand] = useState(false);
   const miles = v.country === "US";
-  const list = states[v.country] ?? [];
+  const list = useMemo(() => states[v.country] ?? [], [states, v.country]);
   // A stored state that is not in the list (typed before states were checked) is still offered, so nothing is lost.
   const chosen = list.find((s) => s.value === v.region || s.code === v.region || s.name === v.region);
   const shown = useMemo(() => { const q = find.trim().toLowerCase(); return q ? list.filter((s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase() === q) : list; }, [list, find]);

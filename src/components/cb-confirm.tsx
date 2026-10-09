@@ -10,9 +10,10 @@ import { Pressable, Text, TextInput, View, type ScrollView } from "react-native"
 import { BizMark, Cta, Grp, Head, Icon, Line, LinkText, LockIcon, Opt, Shell, ShieldIcon, Strip, Tile } from "@/components/cb-ui";
 import { PayWith, walletsFor } from "@/components/mp-pay";
 import { Card, Field, Note, Row, T } from "@/components/ui";
+import { sendBooking } from "@/lib/booking-request";
 import { api, ApiError } from "@/lib/api";
 import { bookHref, nice, cancelRule, span, dayLabel, draftOf, inZone, keepDraft, providerOf, REFUSALS, sentence, type Biz, type Booking, type Details, type Question, type Service, type Slot } from "@/lib/cb-lib";
-import { duration, firstName, money } from "@/lib/format";
+import { firstName, money } from "@/lib/format";
 import { usePayChoice } from "@/lib/mp-cards";
 import { keepBookingPhone, useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
@@ -39,18 +40,19 @@ export function CbConfirm(p: Props) {
   const pay = usePayChoice(cur);
   const scroll = useRef<ScrollView>(null);
   const at = useRef<Record<string, number>>({});
-  const mark = (key: string) => (e: { nativeEvent: { layout: { y: number } } }) => { at.current[key] = e.nativeEvent.layout.y; };
+  const mark = (key: string, e: { nativeEvent: { layout: { y: number } } }) => { at.current[key] = e.nativeEvent.layout.y; };
   // A question is measured inside the group of questions, which starts under its heading.
   const show = (key: string) => scroll.current?.scrollTo({ y: Math.max(0, (at.current[key] ?? 0) + (key.startsWith("q-") ? (at.current.questions ?? 0) + 46 : 0) - 16), animated: true });
 
   // ----- who is booking, who is coming, and their answers -----
-  const [d, setD] = useState<Details>(() => draftOf(biz.slug) ?? { first: "", last: "", phone: "", email: "", note: "", who: "me", guest: "", answers: {} });
+  const [d, setD] = useState<Details>(() => draftOf(biz.slug, s.clientToken) ?? { first: "", last: "", phone: "", email: "", note: "", who: "me", guest: "", answers: {} });
   // A signed-in client's own details fill any gap, also when they sign in half way through.
-  useEffect(() => {
-    if (!me) return;
-    setD((x) => ({ ...x, first: x.first || String(me.first_name ?? ""), last: x.last || String(me.last_name ?? ""), phone: x.phone || String(me.phone ?? ""), email: x.email || String(me.email ?? "") }));
-  }, [me]);
-  useEffect(() => { keepDraft(biz.slug, d); }, [d, biz.slug]);
+  const [filledFor, setFilledFor] = useState<string | null>(null);
+  if (me && filledFor !== me.id) {
+    setFilledFor(me.id);
+    setD(x => ({ ...x, first: x.first || String(me.first_name ?? ""), last: x.last || String(me.last_name ?? ""), phone: x.phone || String(me.phone ?? ""), email: x.email || String(me.email ?? "") }));
+  }
+  useEffect(() => { keepDraft(biz.slug, d, s.clientToken); }, [d, biz.slug, s.clientToken]);
   const [editing, setEditing] = useState(false);
   const [tried, setTried] = useState(false);
   const [refused, setRefused] = useState<{ id: string; text: string } | null>(null);
@@ -107,6 +109,7 @@ export function CbConfirm(p: Props) {
 
   // ----- confirm -----
   const [busy, setBusy] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState("");
   async function confirm() {
     if (busy) return;
@@ -116,15 +119,13 @@ export function CbConfirm(p: Props) {
     setBusy(true);
     let made: Booking;
     try {
-      made = (await s.capi<{ booking: Booking }>("/bookings", {
-        body: {
+      made = (await sendBooking<{ booking: Booking }>(s.customer?.id ?? "guest", {
           business_slug: biz.slug, staff_id: slot.staff_id, starts_at: slot.starts_at, service_ids: services.map((x) => x.id), client_name: fullName, client_phone: d.phone.trim(), client_email: d.email.trim(),
           notes: d.note.trim(), promo_code: promo?.code ?? "", source: p.src === "search" ? "search" : "app", guest_name: guest,
           answers: intake.filter(answered).map((q) => ({ question_id: q.id, answer: answerOf(q) })),
           // A kept card to charge, or a wish to keep the one about to be typed. Sent only while saved cards are live and the client is signed in.
           ...(mayPay ? pay.fields() : {}),
-        },
-      })).booking;
+        }, (body) => s.capi("/bookings", { body }))).booking;
     } catch (e) {
       setBusy(false);
       const err = e as ApiError;
@@ -138,11 +139,12 @@ export function CbConfirm(p: Props) {
         return;
       }
       if (err.status === 400 && /promo code/.test(said)) { setPromo(null); setPromoError(err.message); show("promo"); return; }
-      setError(err.status === 0 ? "We could not reach LogaLuxe. Nothing was booked. Try again in a moment." : err.message);
+      if (err.status === 0 || err.status >= 500) setUncertain(true);
+      setError(err.status === 0 || err.status >= 500 ? "We could not confirm the result. Your booking may have been received. You can retry safely; the same request cannot create a second booking." : err.message);
       setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50);
       return;
     }
-    keepDraft(biz.slug, null);
+    keepDraft(biz.slug, null, s.clientToken);
     keepBookingPhone(made.id, d.phone.trim());
     // A deposit paid online: the provider's own page opens. The booking screen then says whether it arrived.
     // A kept card that was charged at once leaves no page to open: the booking comes back with its deposit paid.
@@ -161,7 +163,7 @@ export function CbConfirm(p: Props) {
 
   const footer = (
     <View style={{ gap: 8 }}>
-      <Cta busy={busy} onPress={confirm} lead={deposit > 0 && online ? <LockIcon /> : undefined}>{cta}</Cta>
+      <Cta busy={busy} onPress={confirm} lead={deposit > 0 && online ? <LockIcon /> : undefined}>{uncertain ? "Retry safely" : cta}</Cta>
       {deposit > 0 && online ? <T muted size={12} center>You will be charged {money(deposit, cur)} on {provider}, in {cur === "NGN" ? "naira" : "US dollars"}.</T> : null}
       <T muted size={11} center>By confirming you agree to {biz.name}&apos;s cancellation policy and LogaLuxe&apos;s terms.</T>
     </View>
@@ -202,7 +204,7 @@ export function CbConfirm(p: Props) {
         {!instant ? <Strip kind="gold" icon={<Icon name="clock" size={18} color={c.goldInk} />}>{biz.name} confirms each booking itself. Your time is held while you wait to hear back.</Strip> : null}
       </View>
 
-      <View onLayout={mark("details")}>
+      <View onLayout={(event) => mark("details", event)}>
         <Grp>Your details</Grp>
         {showFields ? (
           <View style={{ gap: 12 }}>
@@ -232,7 +234,7 @@ export function CbConfirm(p: Props) {
         )}
       </View>
 
-      <View onLayout={mark("who")}>
+      <View onLayout={(event) => mark("who", event)}>
         <Grp>This booking is for</Grp>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Opt center title="Me" on={d.who === "me"} onPress={() => setD((x) => ({ ...x, who: "me" }))} style={{ flex: 1 }} />
@@ -246,7 +248,7 @@ export function CbConfirm(p: Props) {
       </View>
 
       {intake.length > 0 ? (
-        <View onLayout={mark("questions")}>
+        <View onLayout={(event) => mark("questions", event)}>
           <Grp>A few questions from {biz.name}</Grp>
           {refused && !refusedQ ? <View style={{ marginBottom: 12 }}><Note kind="bad">{refused.text}</Note></View> : null}
           <View style={{ gap: 16 }}>
@@ -259,7 +261,7 @@ export function CbConfirm(p: Props) {
               if (q.kind === "consent") {
                 const on = a === "yes";
                 return (
-                  <View key={q.id} onLayout={mark(`q-${q.id}`)} style={{ gap: 6 }}>
+                  <View key={q.id} onLayout={(event) => mark(`q-${q.id}`, event)} style={{ gap: 6 }}>
                     <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={q.label} onPress={() => setAnswer(q.id, on ? "" : "yes")} style={{ flexDirection: "row", gap: 12, minHeight: 44, alignItems: "center" }}>
                       <View style={{ width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: problem ? c.bad : c.ink, backgroundColor: on ? c.ink : c.white, alignItems: "center", justifyContent: "center" }}>{on ? <Icon name="check" size={15} color={c.cream} stroke={3} /> : null}</View>
                       <View style={{ flex: 1 }}>{ask}</View>
@@ -269,7 +271,7 @@ export function CbConfirm(p: Props) {
                 );
               }
               if (q.kind === "text") return (
-                <View key={q.id} onLayout={mark(`q-${q.id}`)} style={{ gap: 6 }}>
+                <View key={q.id} onLayout={(event) => mark(`q-${q.id}`, event)} style={{ gap: 6 }}>
                   {ask}
                   <TextInput accessibilityLabel={q.label} multiline maxLength={1000} value={a} onChangeText={(v) => setAnswer(q.id, v)} placeholderTextColor={c.muted2}
                     style={{ minHeight: 64, borderRadius: 14, borderWidth: 1, borderColor: problem ? c.bad : c.line2, backgroundColor: c.white, paddingHorizontal: 14, paddingVertical: 12, fontFamily: f.body, fontSize: 14, color: c.ink, textAlignVertical: "top" }} />
@@ -278,7 +280,7 @@ export function CbConfirm(p: Props) {
               );
               const opts = q.kind === "yesno" ? [["yes", "Yes"], ["no", "No"]] : (q.options ?? []).map((o) => [o, o]);
               return (
-                <View key={q.id} onLayout={mark(`q-${q.id}`)} accessibilityRole="radiogroup" accessibilityLabel={q.label} style={{ gap: 8 }}>
+                <View key={q.id} onLayout={(event) => mark(`q-${q.id}`, event)} accessibilityRole="radiogroup" accessibilityLabel={q.label} style={{ gap: 8 }}>
                   {ask}
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                     {opts.map(([v, t]) => <Opt key={v} center title={t} on={a === v} onPress={() => setAnswer(q.id, v)} style={{ minWidth: 92, paddingHorizontal: 16, minHeight: 44, paddingVertical: 8 }} />)}
@@ -304,7 +306,7 @@ export function CbConfirm(p: Props) {
         </>
       ) : null}
 
-      <View onLayout={mark("promo")}>
+      <View onLayout={(event) => mark("promo", event)}>
         <Grp note="(optional)">Promo code</Grp>
         {promo ? (
           <Card style={{ paddingVertical: 6, paddingHorizontal: 14 }}>
@@ -332,7 +334,7 @@ export function CbConfirm(p: Props) {
       <TextInput accessibilityLabel={`Note for ${noteFor}`} multiline maxLength={1000} value={d.note} onChangeText={(v) => setD((x) => ({ ...x, note: v }))} placeholder="Hair length, allergies, anything they should know…" placeholderTextColor={c.muted2}
         style={{ minHeight: 64, borderRadius: 14, borderWidth: 1, borderColor: c.line2, backgroundColor: c.white, paddingHorizontal: 14, paddingVertical: 12, fontFamily: f.body, fontSize: 14, color: c.ink, textAlignVertical: "top" }} />
 
-      {error ? <View style={{ marginTop: 16 }}><Note kind="bad">{error}</Note></View> : null}
+      {error ? <View style={{ marginTop: 16, gap: 10 }}><Note kind="bad">{error}</Note>{uncertain ? <Cta kind="out" onPress={() => router.push((s.clientToken ? "/client/bookings" : `/c/b/${biz.slug}`) as never)}>{s.clientToken ? "Check my bookings" : "Contact the business to check"}</Cta> : null}</View> : null}
     </Shell>
   );
 }

@@ -2,7 +2,7 @@
 // (POST /v1/m/campaigns) and opens on the draft, where the test and the send are.
 // The AI button only puts words in the box (POST /v1/m/ai/campaign): nothing is saved or sent by it.
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { Choice, SmallBtn } from "@/components/mc-kit";
 import { B, MessageBox, MgIcon, NotReady, Page, Steps, Tip } from "@/components/mg-kit";
@@ -37,16 +37,15 @@ export default function CampaignNew() {
   });
 
   // Changing the wording of a draft: start from what it says. The draft itself cannot be edited, so a new one replaces it.
-  const filled = useRef(false);
-  useEffect(() => {
-    if (!d || filled.current || !from) return;
+  const [filled, setFilled] = useState("");
+  if (d && from && filled !== from) {
+    setFilled(from);
     const old = ((d.main.campaigns ?? []) as Data[]).find((x) => x.id === from && x.status === "draft");
-    filled.current = true;
-    if (!old) return;
-    setAudience(AUDIENCE_LABEL[old.audience] ? old.audience : "all"); setChannel(CHANNEL_LABEL[old.channel] ? old.channel : "email");
-    setName(String(old.name ?? "")); setSubject(String(old.subject ?? "")); setMessage(String(old.message ?? ""));
-    setStep(1);
-  }, [d, from]);
+    if (old) {
+      setAudience(AUDIENCE_LABEL[old.audience] ? old.audience : "all"); setChannel(CHANNEL_LABEL[old.channel] ? old.channel : "email");
+      setName(String(old.name ?? "")); setSubject(String(old.subject ?? "")); setMessage(String(old.message ?? "")); setStep(1);
+    }
+  }
 
   if (!d) return <NotReady title="New campaign" denied={denied} error={loadError} reload={reload} what="Campaigns are written and sent by a manager or the owner." />;
 
@@ -57,7 +56,6 @@ export default function CampaignNew() {
   const reach = channel === "email" ? a.email : a.phone;
   const chName = CHANNEL_LABEL[channel] ?? channel;
   const logged = modes[channel] === "log";
-  const emailLive = modes.email !== "log";
   const ai = d.ai?.enabled ? { used: used ?? Number(d.ai.used_today ?? 0), limit: Number(d.ai.limit ?? 0) } : null;
   const replacing = !!from && ((d.main.campaigns ?? []) as Data[]).some((x) => x.id === from && x.status === "draft");
 

@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 // Pieces the business calendar, clients and inbox screens share, drawn to the designs' sizes.
 import { useRef, type ReactNode } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from "react-native";
@@ -201,7 +202,7 @@ export function Choice({ title, sub, on, onPress, danger, right }: { title: stri
 export function TimeStep({ label, value, onChange, step = 15, min = 0, max = 24 * 60 }: { label: string; value: number; onChange: (v: number) => void; step?: number; min?: number; max?: number }) {
   // Two quick presses must both count, so the latest value is kept here between renders.
   const now = useRef(value);
-  now.current = value;
+  useLayoutEffect(() => { now.current = value; }, [value]);
   const set = (v: number) => { now.current = Math.min(max, Math.max(min, v)); onChange(now.current); };
   return (
     <View style={{ flex: 1, gap: 6 }}>

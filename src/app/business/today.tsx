@@ -1,3 +1,4 @@
+import { useClock } from "@/lib/use-clock";
 // Today (design: M1-Today). The day's numbers, what is happening now and next, and the day's visits.
 // People who may see every calendar get the whole business's day; a team member limited to their own
 // calendar gets only their own visits (the API filters GET /m/calendar for them) and numbers worked out
@@ -10,7 +11,7 @@ import { Sheet, WeekStrip, weekFrom } from "@/components/ma-kit";
 import { Avatar, Btn, Card, Empty, Failed, Icon, Loading, Note, Pill, Row, Screen, T } from "@/components/ui";
 import type { Row as Data } from "@/lib/api";
 import { clock, duration, firstName, money, plural, ymd } from "@/lib/format";
-import { addDays, allowed, away, clockParts, comingOf, plainName, dayLabel, dowOf, dueOf, greetingFor, guestOf, hourIn, isManager, minutesOf, mondayOf, monthDay, shortName, todayIn, weekdayLong } from "@/lib/ma-format";
+import { allowed, away, clockParts, comingOf, plainName, dayLabel, dowOf, dueOf, greetingFor, guestOf, hourIn, isManager, minutesOf, mondayOf, monthDay, shortName, todayIn, weekdayLong } from "@/lib/ma-format";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";
@@ -24,6 +25,7 @@ type Todo = { key: string; title: string; sub: string; tag: string; kind: "gold"
 const go = (path: string) => router.push(path as never);
 
 export default function Today() {
+  const clockNow = useClock();
   const s = useSession();
   const insets = useSafeAreaInsets();
   const m = s.merchant;
@@ -135,7 +137,7 @@ export default function Today() {
   }
 
   const { cal, home, setup } = data;
-  const now = Date.now();
+  const now = clockNow;
   const isToday = day === today;
   const week = weekFrom(monday);
   const all = (cal.bookings ?? []) as Data[];

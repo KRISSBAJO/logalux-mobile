@@ -1,9 +1,10 @@
+import { useLayoutEffect , useCallback, useMemo, useRef, useState } from "react";
 // A conversation with one business (design: C7-Chat). New messages arrive while the screen is open:
 // it asks again every 15 seconds while in view, and straight after sending.
 // Left out because the API has nothing behind them: the "usually replies within" line, the reminder
 // notices, and the quick actions and photo attachment above the composer.
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar, Btn, Card, Failed, Icon, IconButton, Loading, Note, Pill, T } from "@/components/ui";
@@ -42,7 +43,7 @@ export default function Chat() {
 
   // While the screen is in view, look for new messages every 15 seconds.
   const data = useRef(q.data);
-  data.current = q.data;
+  useLayoutEffect(() => { data.current = q.data; }, [q.data]);
   const poll = useCallback(async () => {
     if (!s.clientToken || !data.current) return;
     try {

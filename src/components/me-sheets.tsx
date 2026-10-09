@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // The forms of the Staff & chairs screens, each a sheet from the bottom: a new person, their details, pay,
 // rental terms, their week and breaks, what they perform, time off, and their sign-in.
 // Fields, limits and wording follow the web's Staff & rosters tool; every save goes to the same API calls.
@@ -54,8 +55,8 @@ export function AddPersonSheet({ open, onClose, owner, cur, renter: startRenter,
   const blank = { name: "", role: "staff", level: "senior", pay: "commission", hourly: "", salary: "", commission: "0", retail: "0", email: "", phone: "", tone: "#7A1F2B", bookable: true };
   const [v, setV] = useState(blank), [renter, setRenter] = useState(!!startRenter), [rent, setRent] = useState<Rent>(rentOf());
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setV(blank); setRenter(!!startRenter); setRent(rentOf()); setError(""); } /* a fresh form each time it opens */ // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  useFormReset([open], () => { if (open) { setV(blank); setRenter(!!startRenter); setRent(rentOf()); setError(""); } /* a fresh form each time it opens */  
+  });
   const set = (change: Partial<typeof blank>) => setV((x) => ({ ...x, ...change }));
 
   const save = () => run(async () => {
@@ -129,8 +130,8 @@ export function DetailsSheet({ p, open, onClose, owner, onSaved }: { p: Data; op
   const start = () => ({ name: String(p.name ?? ""), role: String(p.role ?? "staff"), level: String(p.level ?? "senior"), email: String(p.email ?? ""), phone: String(p.phone ?? ""), tone: String(p.tone ?? "#7A1F2B") });
   const [v, setV] = useState(start);
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setV(start()); setError(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, p.id]);
+  useFormReset([open, p.id], () => { if (open) { setV(start()); setError(""); }  
+  });
   const set = (change: Partial<ReturnType<typeof start>>) => setV((x) => ({ ...x, ...change }));
   const lockedOwner = p.role === "owner" && !owner, renter = isRenter(p);
 
@@ -166,8 +167,8 @@ export function PaySheet({ p, open, onClose, cur, onSaved }: { p: Data; open: bo
   const start = (): PayV => ({ pay: String(p.pay_type ?? "commission"), hourly: p.hourly_cents ? major(p.hourly_cents) : "", salary: p.salary_cents ? major(p.salary_cents) : "", commission: String(p.commission_pct ?? 0), retail: String(p.retail_commission_pct ?? 0) });
   const [v, setV] = useState(start);
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setV(start()); setError(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, p.id]);
+  useFormReset([open, p.id], () => { if (open) { setV(start()); setError(""); }  
+  });
 
   const save = () => run(async () => {
     const hourly = toCents(v.hourly), salary = toCents(v.salary), com = toPct(v.commission), ret = toPct(v.retail);
@@ -191,8 +192,8 @@ export function RentTermsSheet({ p, open, onClose, cur, onSaved }: { p: Data; op
   const s = useSession();
   const [rent, setRent] = useState<Rent>(rentOf(p)), [stop, setStop] = useState("");
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setRent(rentOf(p)); setError(""); setStop(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, p.id]);
+  useFormReset([open, p.id], () => { if (open) { setRent(rentOf(p)); setError(""); setStop(""); }  
+  });
 
   const save = () => run(async () => {
     const cents = toCents(rent.rent);
@@ -235,8 +236,8 @@ export function HoursSheet({ p, loc, open, onClose, onSaved }: { p: Data; loc: W
   };
   const [follow, setFollow] = useState(!p.hours), [days, setDays] = useState(start);
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setFollow(!p.hours); setDays(start()); setError(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, p.id]);
+  useFormReset([open, p.id], () => { if (open) { setFollow(!p.hours); setDays(start()); setError(""); }  
+  });
   const change = (d: Day, patch: Partial<DayV>) => setDays((all) => ({ ...all, [d]: { ...all[d], ...patch } }));
   const who = first(p.name);
   const openLoc = DAYS.filter((d) => Array.isArray(loc?.[d]) && loc![d]!.length === 2);
@@ -325,7 +326,7 @@ export function ServicesSheet({ p, open, onClose, cur, onSaved }: { p: Data; ope
       setPrice(Object.fromEntries(list.map((sv) => { const own = ((sv.staff ?? []) as Data[]).find((x) => String(x.staff_id) === pid)?.price_cents; return [String(sv.id), own === null || own === undefined ? "" : major(own)]; })));
     }).catch((e: Error) => setLoadError(e.message));
   };
-  useEffect(() => { if (open) { setError(""); load(); } // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { let live = true; queueMicrotask(() => { if (live && open) { setError(""); load(); } }); return () => { live = false; }; // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, pid]);
 
   const save = () => run(async () => {
@@ -389,8 +390,8 @@ export function TimeOffSheet({ open, onClose, people, staffId, manager, today, o
   const s = useSession();
   const [who, setWho] = useState(staffId), [from, setFrom] = useState(today), [to, setTo] = useState(""), [reason, setReason] = useState("");
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setWho(staffId); setFrom(today); setTo(""); setReason(""); setError(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, staffId]);
+  useFormReset([open, staffId], () => { if (open) { setWho(staffId); setFrom(today); setTo(""); setReason(""); setError(""); }  
+  });
 
   const save = () => run(async () => {
     if (!who) throw new Error("Choose who it is for.");
@@ -440,8 +441,8 @@ export function InviteSheet({ p, open, onClose, onSaved }: { p: Data; open: bool
   const has = !!p.login_email;
   const [email, setEmail] = useState(""), [role, setRole] = useState<"staff" | "manager">("staff");
   const { busy, error, setError, run } = useSave();
-  useEffect(() => { if (open) { setEmail(String(p.login_email || p.email || "")); setRole(p.login_role === "manager" ? "manager" : "staff"); setError(""); } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, p.id]);
+  useFormReset([open, p.id], () => { if (open) { setEmail(String(p.login_email || p.email || "")); setRole(p.login_role === "manager" ? "manager" : "staff"); setError(""); }  
+  });
 
   const save = () => run(async () => {
     const to = email.trim().toLowerCase();

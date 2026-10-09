@@ -1,15 +1,16 @@
+import { useFormReset } from "../../../lib/form-reset";
 // One person on the team: who they are, this week, whether clients can book them, what they perform and at
 // what price, their week and breaks, time off, pay, rental terms, what their sign-in may do, and leaving the team.
 // A manager or the owner changes it; a team member reads their own page and can ask for time off.
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { Grp, Header, Item, SetRow, SmallBtn, Sw, Tag, Val, Wait } from "@/components/mc-kit";
 import { AskCard, Face, Minis, OffCard, first, roleLine } from "@/components/me-kit";
 import { DetailsSheet, HoursSheet, InviteSheet, PaySheet, RentTermsSheet, ServicesSheet, TimeOffSheet, useOffActions } from "@/components/me-sheets";
 import { Btn, Card, Empty, Failed, Icon, Note, Row, Screen, T } from "@/components/ui";
 import type { Row as Data } from "@/lib/api";
-import { money, plural } from "@/lib/format";
+import { money } from "@/lib/format";
 import { DAY_LONG, ask, dateOnly, soft } from "@/lib/mc-util";
 import { tel } from "@/lib/ma-format";
 import { monthYear } from "@/lib/mb-util";
@@ -42,8 +43,8 @@ export default function Person() {
   const mayEdit = manager && !!p && !p.archived;
   // A link can ask for one of the forms to be open on arrival, for example from the roster.
   const wanted = SHEETS.includes(String(q.open)) ? (String(q.open) as SheetName) : "";
-  useEffect(() => { if (wanted && mayEdit) setSheet(wanted); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wanted, mayEdit]);
+  useFormReset([wanted, mayEdit], () => { if (wanted && mayEdit) setSheet(wanted);  
+  });
 
   if (!data || !p) {
     return (

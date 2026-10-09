@@ -376,7 +376,7 @@ export default function Profile() {
                 </View>
               ) : null}
               {summary ? <View style={{ marginTop: 14, backgroundColor: c.cream2, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 }}><T size={14}><Text style={{ fontFamily: f.bold }}>What people say: </Text>{summary}</T></View> : null}
-              {reviewCount === 0 ? <View style={{ marginTop: 14 }}><Empty title="No reviews yet">Reviews appear here after a client's visit is completed and paid for.</Empty></View> : null}
+              {reviewCount === 0 ? <View style={{ marginTop: 14 }}><Empty title="No reviews yet">Reviews appear here after a client’s visit is completed and paid for.</Empty></View> : null}
 
               {all && rev ? (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 14, marginHorizontal: -pad }} contentContainerStyle={{ paddingHorizontal: pad, gap: 8 }}>

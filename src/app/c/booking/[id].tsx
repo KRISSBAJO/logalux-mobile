@@ -28,9 +28,16 @@ export default function Booking() {
 
   const q = useLoad(async () => {
     if (!s.clientToken) return null;
-    const me = await s.capi<{ bookings: Data[] }>("/auth/me");
-    const all = me.bookings ?? [];
-    const b = all.find((x) => x.id === id);
+    const direct = await s.capi<{ booking: Data }>(`/auth/bookings/${id}`);
+    const all: Data[] = [];
+    if (direct.booking.series_id) {
+      let page = 1, pages = 1;
+      do {
+        const me = await s.capi<{ bookings: Data[]; booking_page: Data }>(`/auth/me?paged=1&scope=upcoming&page=${page}`);
+        all.push(...(me.bookings ?? [])); pages = Number(me.booking_page.pages) || 1; page++;
+      } while (page <= pages);
+    }
+    const b = direct.booking;
     if (!b) throw new Error("We could not find that booking in your account.");
     const upcoming = isUpcoming(b);
     // The other upcoming visits of the same series, soonest first, each with its own cancellation rule.
@@ -53,7 +60,10 @@ export default function Booking() {
   useEffect(() => {
     if (started.current || !q.data) return;
     started.current = true;
-    if (start === "move" && q.data.more?.can_reschedule) setDoing("move");
+    if (start === "move" && q.data.more?.can_reschedule) {
+      const timer = setTimeout(() => setDoing("move"), 0);
+      return () => { clearTimeout(timer); started.current = false; };
+    }
   }, [q.data, start]);
 
   if (!s.ready) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
@@ -75,7 +85,7 @@ export default function Booking() {
 
   const { b, upcoming, more, payment, series } = q.data;
   const tz = b.timezone as string;
-  const [label, kind] = bookingState(b.status);
+  const [label, kind] = bookingState(b.status, b.ends_at);
   const t = tile(b.starts_at, tz);
   const guest = String(b.guest_name ?? "").trim();
   const place = [b.address, b.city].filter(Boolean).join(", ");

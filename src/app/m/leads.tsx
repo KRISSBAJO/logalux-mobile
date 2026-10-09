@@ -2,7 +2,7 @@
 // GET /v1/m/leads reads it (a manager may). The owner alone changes promotion (PUT /leads/settings) and disputes a fee (POST /leads/{id}/dispute).
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { FlatList, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Grp, Header, McIcon, Sheet, SmallBtn, Stepper, Sw, Tag } from "@/components/mc-kit";
 import { LinkText } from "@/components/ma-kit";

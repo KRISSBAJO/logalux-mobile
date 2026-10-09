@@ -1,7 +1,8 @@
+import { useFormReset } from "../../lib/form-reset";
 // What shoppers are told: returns, delivery time and same-day pick-up, shown beside every product the
 // business sells in the shop. PUT /v1/m/shop-policy replaces the whole policy, so the languages the
 // business speaks (set on its storefront) travel back unchanged.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { Choice, Grp, Header } from "@/components/mc-kit";
 import { Blank, Fine } from "@/components/mf-kit";
@@ -26,14 +27,14 @@ export default function ShopPolicy() {
   const [note, setNote] = useState<{ kind: "ok" | "bad"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
+  useFormReset([p], () => {
     if (!p) return;
     const r = !has(p.returns_days) ? "none" : Number(p.returns_days) === 0 ? "no" : "days";
     setReturns(r); setReturnsN(r === "days" ? String(p.returns_days) : ""); setReturnsNote(String(p.returns_note ?? ""));
     const sh = has(p.ship_days_min) && has(p.ship_days_max);
     setShip(sh ? "days" : "none"); setShipMin(sh ? String(p.ship_days_min) : ""); setShipMax(sh ? String(p.ship_days_max) : "");
     setPickup(has(p.pickup_ready_mins) ? "mins" : "none"); setPickupN(has(p.pickup_ready_mins) ? String(p.pickup_ready_mins) : "");
-  }, [p]);
+  });
 
   if (!p) return <Blank title="What shoppers are told" error={error} onRetry={reload} denied={data === DENIED} what="Only a manager or the owner can change what shoppers are told." />;
 

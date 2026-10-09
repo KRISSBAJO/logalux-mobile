@@ -1,3 +1,4 @@
+import { useClock } from "@/lib/use-clock";
 // One booking (design: M2-Booking): who is coming, what for, what is paid and what is left, the notes,
 // and the steps the web offers from each status, each through POST /m/bookings/{id}/action.
 import { Redirect, router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -20,6 +21,7 @@ const DONE: Record<string, string> = {
 const go = (path: string) => router.push(path as never);
 
 export default function Booking() {
+  const clockNow = useClock();
   const { id, done } = useLocalSearchParams<{ id: string; done?: string }>();
   const s = useSession();
   const m = s.merchant;
@@ -69,7 +71,7 @@ export default function Booking() {
   const status = String(b.status);
   const due = dueOf(b);
   const guest = guestOf(b);
-  const started = Date.parse(b.starts_at) < Date.now();
+  const started = Date.parse(b.starts_at) < clockNow;
   // Once paid, the booking's total is what was charged for goods and services after discounts, which can
   // include things added at the desk. Show the difference so the lines add up.
   const extra = status === "paid" && items.length ? Number(b.total_cents) + Number(b.discount_cents ?? 0) - items.reduce((a, it) => a + Number(it.price_cents), 0) : 0;

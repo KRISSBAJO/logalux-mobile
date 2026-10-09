@@ -56,8 +56,29 @@ Business side (`/business/*` tabs, other screens under `/m/*`). Every tool a bus
 
 - Sign-in is by email and password, and by a texted code once an admin switches that on in the console (Features). Texts, WhatsApp, the Apple Pay and Google Pay note and saved cards appear in the app only while switched on; the app reads `GET /v1/features` on every screen focus.
 - A new person sees a welcome screen once, then the client home; a business person signs in from it.
-- Where the person is comes from the API's first guess (`GET /v1/locate`, from the device's internet address), and is shown as a guess until they choose a place or press "Use my exact location". Every list is their own country, nearest first; a switch in the place panel browses the other country with a banner. On web, `localStorage.lx_dev_ip = "102.89.23.4"` tries the Lagos guess in development. Exact location on a phone needs `expo-location` (one marked line in `src/lib/ca-place.ts`); until it is added the app says so.
+- Where the person is comes from the API's first guess (`GET /v1/locate`, from the device's internet address), and is shown as a guess until they choose a place or press "Use my exact location". Every list is their own country, nearest first; a switch in the place panel browses the other country with a banner. On web, `localStorage.lx_dev_ip = "102.89.23.4"` tries the Lagos guess in development. Native foreground location uses SDK-compatible `expo-location`, only after Use my exact location. Denial, disabled services and a 12-second timeout keep manual place selection available. Rebuild the native app after adding the permission plugin; no background location is requested.
 - Payment happens on Stripe's or Paystack's own page, opened in the phone's browser. The app never sees a card.
 - Bank details are entered on the provider page (Stripe), or for Nigeria exactly as the web does it. Only help pages open the website.
 - Spreadsheet exports are shared as text on a phone; sharing a real file needs `expo-sharing` and `expo-file-system`.
 - There are no push notifications yet. They need an Expo account and Apple and Google developer accounts, as do builds for phones and the stores.
+
+### Customer mobile safety and account controls
+
+- Account changes remount private screens. Resource loads hide old-account/old-route data and ignore stale responses. Network requests time out after 25 seconds, including response-body reads. A customer 401 clears the matching session only.
+- Bookings use server pagination (12 per page); owned detail and review screens fetch by ID, including visits older than the first history page. Elapsed active visits say Awaiting business update.
+- Account offers native order history, payment links and shipment progress, privacy export, signed-in devices and account deletion with explicit confirmation. The API enforces ownership and deletion blockers. Shop browsing/checkout opens on the website through a two-minute, single-use account handoff. The browser explicitly confirms the app account; long-lived native tokens never enter URLs. Signing out the source session invalidates unused links.
+- Phone-only accounts can add an email in Details, save it, then set a password. Existing-password changes still require the current password.
+- Booking request IDs are saved in encrypted device storage before sending. Retrying after a disconnect reuses the same account-scoped ID. The API uniquely stores that ID with the booking and rejects changed payloads; it replays the original booking instead of making another.
+- `npm run test:customer-safety` exercises old-account response isolation, route changes, failure/retry state, sign-out, request timeout and body-read disconnections. Backend security tests exercise older owned booking details, privacy controls and foreign-account rejection in disposable databases.
+- Native location prompts, share sheet, payment return and accessibility still need checks on real iOS/Android devices. An Android JavaScript export is not an installed-device test.
+
+Verification (2026-10-08): TypeScript and lint for the changed customer screens/shared session loader pass. Android JavaScript/Hermes export succeeds. Disposable-database security regressions pass, including old-booking detail ownership. The full-app lint sweep is clean, with the checks enabled. New authenticated order/privacy layouts and native OS interactions need a signed-in real-device acceptance pass before launch. Production seeded records were not edited by these tests.
+
+
+### Completion checks (2026-10-08)
+
+- Full Expo lint and mobile/web TypeScript checks; customer safety and signed-in screen regression tests.
+- `node scripts/tests/customer-screens.cjs`: orders pagination/filter/failure/retry, privacy export, device revocation, deletion confirmation and guest gates.
+- Disposable-database tests cover booking replay ownership, single-use/expired/revoked browser handoffs and separate USD/NGN credit balances. No seeded records are changed.
+- Account overview, wallet and checkout keep dollar and naira balances separate; the browsing country selects the primary display. Actual bookings and purchases retain the seller's currency. Referral awards remain explicitly USD.
+- Android and iOS JavaScript/Hermes bundles export. No physical device was attached (`adb devices` empty). Native permission prompts, installed-app payment returns, sharing and screen-reader behaviour remain real-device acceptance checks.

@@ -96,7 +96,7 @@ export default function Clients() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dq, segment, sort, mapi]);
 
-  useEffect(() => { void load(1, "first"); }, [load, s.businessToken]);
+  useEffect(() => { let live = true; queueMicrotask(() => { if (live) void load(1, "first"); }); return () => { live = false; }; }, [load, s.businessToken]);
   useRefocus(() => { void load(meta.pages || 1, "quiet"); });
 
   const hasMore = loaded && rows.length < meta.total;

@@ -23,7 +23,7 @@ export function useSaved(here: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.clientToken]);
 
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => { let live = true; queueMicrotask(() => { if (live) void reload(); }); return () => { live = false; }; }, [reload]);
 
   const has = (slug: string) => list.some((f) => f.slug === slug);
 

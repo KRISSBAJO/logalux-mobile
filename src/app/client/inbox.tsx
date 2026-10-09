@@ -1,7 +1,7 @@
 // Inbox: the client's conversations with businesses, newest first, with what is unread.
 // The design has no separate list screen (C7 is one conversation), so this follows the look of the other tabs.
 import { router } from "expo-router";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SignInGate, TabTitle } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Empty, Failed, Loading } from "@/components/ui";

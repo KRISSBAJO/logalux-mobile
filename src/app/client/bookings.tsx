@@ -2,11 +2,11 @@
 // common things; tapping the card opens the booking, where everything else is.
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Acts, ActBtn, DateTile, Seg, SignInGate, TabTitle } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Empty, Failed, Icon, Loading, Pill, Row, T } from "@/components/ui";
-import type { Row as Data } from "@/lib/api";
+import { media, type Row as Data } from "@/lib/api";
 import { bookingState, dayMonth, isUpcoming, moneyFacts, openCalendar, span, tile, useRefocus } from "@/lib/cc-data";
 import { money, when } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
@@ -20,18 +20,19 @@ export default function Bookings() {
   const p = useLocalSearchParams<{ booked?: string }>();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>("up");
+  const [page, setPage] = useState(1);
 
   const q = useLoad(async () => {
     if (!s.clientToken) return null;
-    const me = await s.capi<{ user: Data; bookings: Data[] }>("/auth/me");
+    const me = await s.capi<{ user: Data; bookings: Data[]; booking_page: Data }>(`/auth/me?paged=1&scope=${tab === "up" ? "upcoming" : "past"}&page=${page}`);
     const all = me.bookings ?? [];
-    const upcoming = all.filter(isUpcoming).reverse(); // the API lists newest first: soonest first here
+    const upcoming = all.filter(isUpcoming); // the API lists newest first: soonest first here
     // What may still be done to each upcoming booking: whether it can be moved, and until when cancelling is free.
-    await Promise.all(upcoming.slice(0, 20).map(async (b) => {
+    await Promise.all(upcoming.map(async (b) => {
       b.more = (await s.capi<{ booking: Data }>(`/auth/bookings/${b.id}`).catch(() => null))?.booking;
     }));
-    return { user: me.user, upcoming, past: all.filter((b) => !isUpcoming(b)) };
-  }, [s.clientToken]);
+    return { paging: me.booking_page, user: me.user, upcoming, past: all.filter((b) => !isUpcoming(b)) };
+  }, [s.clientToken, tab, page]);
   useRefocus(() => { if (s.clientToken) q.refresh(); });
 
   if (!s.ready) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
@@ -47,15 +48,15 @@ export default function Bookings() {
         <View accessibilityRole="alert" style={{ marginTop: 18, backgroundColor: c.ink, borderRadius: 20, padding: 16, flexDirection: "row", gap: 14, alignItems: "center" }}>
           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: c.gold, alignItems: "center", justifyContent: "center" }}><Icon name="check" size={22} color={c.ink} stroke={2.6} /></View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontFamily: f.semi, fontSize: 16, color: "#F4ECE3" }}>You are booked, {q.data?.user?.first_name}.</Text>
+            <Text style={{ fontFamily: f.semi, fontSize: 16, color: "#F4ECE3" }}>{booked.status === "requested" ? "Your request was received" : "Your booking was received"}, {q.data?.user?.first_name}.</Text>
             <Text style={{ fontFamily: f.body, fontSize: 13, color: "#C9BCB0", marginTop: 2 }}>
-              {[booked.deposit_cents > 0 ? `Deposit ${money(booked.deposit_cents, booked.currency)} ${booked.deposit_paid ? "paid" : "not paid yet"}` : "", "Confirmation sent by email"].filter(Boolean).join(" · ")}
+              {[booked.deposit_cents > 0 ? `Deposit ${money(booked.deposit_cents, booked.currency)} ${booked.deposit_paid ? "paid" : "not paid yet"}` : "", "Open the booking for its latest status"].filter(Boolean).join(" · ")}
             </Text>
           </View>
         </View>
       ) : null}
-      <View style={{ marginTop: 18 }}><Seg<Tab> options={[["up", "Upcoming"], ["past", "Past"]]} value={tab} onChange={setTab} /></View>
-      {q.error && !q.data ? <View style={{ marginTop: 14 }}><Failed error={q.error} onRetry={q.reload} /></View> : null}
+      <View style={{ marginTop: 18 }}><Seg<Tab> options={[["up", "Upcoming"], ["past", "Past"]]} value={tab} onChange={(value) => { setTab(value); setPage(1); }} /></View>
+      {q.error ? <View style={{ marginTop: 14 }}><Failed error={q.error} onRetry={q.reload} /></View> : null}
       {q.loading && !q.data ? <Loading label="Loading your bookings" /> : null}
     </View>
   );
@@ -71,6 +72,7 @@ export default function Bookings() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={q.refreshing} onRefresh={q.refresh} tintColor={c.wine} />}
         renderItem={({ item, index }) => (tab === "up" ? <Upcoming b={item} next={index === 0} /> : <Past b={item} />)}
+        ListFooterComponent={q.data && Number(q.data.paging?.pages) > 1 ? <Row gap={12}><Btn small disabled={page <= 1} onPress={() => setPage(page - 1)}>Previous</Btn><T>Page {q.data.paging.page} of {q.data.paging.pages}</T><Btn small disabled={page >= q.data.paging.pages} onPress={() => setPage(page + 1)}>Next</Btn></Row> : null}
         ListEmptyComponent={q.data ? (
           tab === "up"
             ? <Empty title="Nothing booked yet" action={<Btn small onPress={() => router.push("/client/search" as never)}>Find a professional</Btn>}>Bookings you make while signed in appear here.</Empty>
@@ -99,7 +101,7 @@ function Head({ b, left, sub, pill }: { b: Data; left: React.ReactNode; sub: str
 }
 
 function Upcoming({ b, next }: { b: Data; next: boolean }) {
-  const [label, kind] = bookingState(b.status);
+  const [label, kind] = bookingState(b.status, b.ends_at);
   const t = tile(b.starts_at, b.timezone);
   const more = b.more as Data | undefined;
   const facts = [...moneyFacts(b), more?.can_reschedule ? `Free cancel until ${when(more.free_until, b.timezone)}` : ""].filter(Boolean);
@@ -122,7 +124,7 @@ function Upcoming({ b, next }: { b: Data; next: boolean }) {
 }
 
 function Past({ b }: { b: Data }) {
-  const [label, kind] = bookingState(b.status);
+  const [label, kind] = bookingState(b.status, b.ends_at);
   const done = b.status === "completed" || b.status === "paid";
   const tip = Number(b.tip_cents) || 0;
   const sub = [b.business, dayMonth(b.starts_at, b.timezone), done ? `${money(b.total_cents, b.currency)}${tip > 0 ? ` + ${money(tip, b.currency)} tip` : ""}` : ""].filter(Boolean).join(" · ");
@@ -130,7 +132,7 @@ function Past({ b }: { b: Data }) {
   return (
     <Card style={{ padding: 14 }}>
       <Pressable accessibilityRole="button" accessibilityLabel={`${b.services} at ${b.business}, ${dayMonth(b.starts_at, b.timezone)}. Open booking`} onPress={() => open(b)}>
-        <Head b={b} left={<Avatar name={b.business} tone={b.tone} />} sub={sub} pill={b.can_review ? <Pill kind="gold">Review</Pill> : <Pill kind={kind}>{label}</Pill>} />
+        <Head b={b} left={<BusinessPhoto key={b.photo_id ?? b.id} b={b} />} sub={sub} pill={b.can_review ? <Pill kind="gold">Review</Pill> : <Pill kind={kind}>{label}</Pill>} />
       </Pressable>
       <Acts>
         {b.can_review ? (
@@ -147,4 +149,9 @@ function Past({ b }: { b: Data }) {
       </Acts>
     </Card>
   );
+}
+
+function BusinessPhoto({ b }: { b: Data }) {
+  const [failed, setFailed] = useState(false);
+  return b.photo_id && !failed ? <Image source={{ uri: media(b.photo_id) }} accessibilityLabel={b.business} onError={() => setFailed(true)} style={{ width: 46, height: 46, borderRadius: 14 }} /> : <Avatar name={b.business} tone={b.tone} />;
 }

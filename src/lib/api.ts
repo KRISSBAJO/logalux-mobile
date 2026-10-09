@@ -5,7 +5,6 @@
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:18080").replace(/\/+$/, "");
 export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "http://localhost:3100").replace(/\/+$/, "");
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Row = Record<string, any>;
 
 export class ApiError extends Error {
@@ -31,16 +30,22 @@ export async function api<T = Row>(path: string, opts: Options = {}): Promise<T>
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body !== undefined && !opts.form) headers["Content-Type"] = "application/json";
   let res: Response;
+  let text: string;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
   try {
     res = await fetch(`${API_URL}/v1${path}`, {
       method: opts.method ?? (opts.body !== undefined || opts.form ? "POST" : "GET"),
       headers,
+      signal: controller.signal,
       body: opts.form ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body)),
     });
+    text = await res.text();
   } catch {
     throw new ApiError(0, "We could not reach LogaLuxe. Check your connection and try again.");
+  } finally {
+    clearTimeout(timer);
   }
-  const text = await res.text();
   let json: Row = {};
   try {
     json = text ? JSON.parse(text) : {};

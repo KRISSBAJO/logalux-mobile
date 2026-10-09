@@ -1,9 +1,10 @@
+import { useFormReset } from "../../../lib/form-reset";
 // One return request: what is coming back and why, and the answer. Approve and refund, or refuse with a
 // reason (POST /v1/m/returns/{id}). It is answered once. The refund goes back the way the money came:
 // to the card through the payment provider, or as LogaLuxe store credit. While payments are in simulation
 // no card is touched, and the screen says so before anything is approved.
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
 import { Grp, Header, Sw, Tabs2, Tag } from "@/components/mc-kit";
 import { Blank, Fine, Kv, Line } from "@/components/mf-kit";
@@ -37,7 +38,7 @@ export default function ReturnAnswer() {
   const d = data && data !== DENIED ? data : null;
   const r = ((d?.res.returns ?? []) as Data[]).find((x) => x.id === id);
   const itemsCents = Number(r?.items_cents ?? 0);
-  useEffect(() => { if (r?.id) setRefund(major(itemsCents)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [r?.id]);
+  useFormReset([r?.id], () => { if (r?.id) setRefund(major(itemsCents));   });
 
   if (!d) return <Blank title="Return" error={error} onRetry={reload} denied={data === DENIED} what="Only a manager or the owner can answer returns." />;
   if (!r) {
@@ -53,7 +54,7 @@ export default function ReturnAnswer() {
 
   const cur = String(r.currency ?? s.merchant?.currency ?? "USD"); // an order is refunded in the currency it was paid in
   const reasons = (d.res.reasons ?? {}) as Record<string, string>;
-  const st = RETURN_STATE[r.status] ?? { label: String(r.status), kind: "grey" as const };
+  const st = r.provider_refund_status === "pending" ? { label: "Provider refund pending", kind: "gold" as const } : RETURN_STATE[r.status] ?? { label: String(r.status), kind: "grey" as const };
   const items = (r.items ?? []) as Data[], shipping = Number(r.shipping_cents ?? 0), most = itemsCents + shipping;
   const waiting = r.status === "requested";
   const simulated = d.mode !== "" && d.mode !== "live";
@@ -69,7 +70,7 @@ export default function ReturnAnswer() {
       const out = await s.mapi<Data>(`/returns/${r.id}`, { body: { action: "approve", reply: reply.trim(), refund_cents: cents, restock } });
       const card = Number(out.to_card_cents ?? 0), credit = Number(out.credit_cents ?? 0);
       const where = card > 0 && credit > 0 ? `${money(card, cur)} to the customer's card and ${money(credit, cur)} as LogaLuxe store credit` : card > 0 ? "to the customer's card" : "as LogaLuxe store credit";
-      setNote({ kind: "ok", text: `Return approved. ${money(Number(out.refund_cents ?? cents), cur)} refunded, ${where}. ${restock ? "The items are back in stock." : "Stock was not changed."}` });
+      setNote({ kind: "ok", text: out.provider_refund_status === "pending" ? "Return approved. Provider confirmation is pending; recovery is automatic." : `Return approved. ${money(Number(out.refund_cents ?? cents), cur)} refunded, ${where}. ${restock ? "The items are back in stock." : "Stock was not changed."}` });
       await refresh();
     } catch (e) {
       setNote({ kind: "bad", text: (e as Error).message });
@@ -145,7 +146,7 @@ export default function ReturnAnswer() {
             <Card>
               {r.status === "approved" ? (
                 <>
-                  <Kv k="Refunded" v={money(r.refund_cents, cur)} strong />
+                  <Kv k={r.provider_refund_status === "pending" ? "Refund reserved" : "Refunded"} v={money(r.refund_cents, cur)} strong />
                   <Kv k="Where it went" v={refundSplit(r.refund_cents, r.credit_cents, cur)} />
                   <Kv k="Stock" v={r.restocked ? "Items put back in stock" : "Items not put back in stock"} />
                 </>

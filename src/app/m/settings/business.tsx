@@ -1,6 +1,7 @@
+import { useFormReset } from "../../../lib/form-reset";
 // Business details: the name, category, contact, time zone and about text (the web's "Business profile").
 // One save: PUT /v1/m/settings/profile. The sales tax travels with it unchanged; it has its own screen.
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View } from "react-native";
 import { Choice, Grp } from "@/components/mc-kit";
 import { Gate, Page, Pick, backTo } from "@/components/mi-kit";
@@ -23,10 +24,10 @@ export default function BusinessDetails() {
   const [saving, setSaving] = useState(false), [note, setNote] = useState<Flash>(null), [bad, setBad] = useState<{ key: string; text: string } | null>(null);
 
   const b = data && data !== DENIED ? (data.business as Data) : null;
-  useEffect(() => {
+  useFormReset([data], () => {
     if (b) setForm({ name: String(b.name ?? ""), category: String(b.category ?? ""), phone: String(b.phone ?? ""), email: String(b.email ?? ""), about: String(b.about ?? ""), timezone: String(b.timezone ?? "") });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+     
+  });
 
   const zones = useMemo(() => timeZones(String(b?.timezone ?? "")), [b?.timezone]);
   const shownZones = useMemo(() => {

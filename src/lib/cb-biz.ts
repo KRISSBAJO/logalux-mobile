@@ -8,12 +8,13 @@ export type Loaded = { biz: Biz; live: boolean; services: Service[]; staff: Staf
 export function useBiz(slug: string) {
   return useLoad<Loaded>(async () => {
     const j = await api<Row>(`/businesses/${encodeURIComponent(slug)}`);
+    if (!["USD", "NGN"].includes(String(j.business?.currency))) throw new Error("This business has no supported pricing currency. Please try again later.");
     const b = j.business as Row;
     const locations = (j.locations ?? []) as (Place & { is_primary?: boolean })[];
     const place = locations.find((l) => l.is_primary) ?? locations[0] ?? {};
     const display = (j.display ?? {}) as Row;
     return {
-      biz: { slug: String(b.slug), name: String(b.name), tone: String(b.tone ?? ""), logoId: (b.logo_id as string | null) ?? null, currency: String(b.currency || "USD"), tz: String(b.timezone || "UTC"), market: String(b.market ?? ""), place, showAddress: display.show_address !== false, policy: (j.policy ?? {}) as Policy },
+      biz: { slug: String(b.slug), name: String(b.name), tone: String(b.tone ?? ""), logoId: (b.logo_id as string | null) ?? null, currency: String(b.currency), tz: String(b.timezone || "UTC"), market: String(b.market ?? ""), place, showAddress: display.show_address !== false, policy: (j.policy ?? {}) as Policy },
       live: b.status === "live",
       services: (j.services ?? []) as Service[],
       staff: (j.staff ?? []) as Staff[],

@@ -14,6 +14,6 @@ export default function BusinessTabs() {
     { name: "inbox", label: "Inbox", icon: "chat", badge: inbox },
     { name: "more", label: "More", icon: "menu" },
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return <Tabs screenOptions={{ headerShown: false }} tabBar={(p: any) => <TabBar {...p} />} />;
 }

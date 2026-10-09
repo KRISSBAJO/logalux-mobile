@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { Grp, Header, Item, McIcon, SmallBtn, Wait } from "@/components/mc-kit";
 import { Card, Note, Row, Screen, T } from "@/components/ui";
-import { bookingLink, copyText, isLocalAddress, openWeb, shareText } from "@/lib/mc-util";
+import { bookingLink, copyText, isLocalAddress, shareText } from "@/lib/mc-util";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 

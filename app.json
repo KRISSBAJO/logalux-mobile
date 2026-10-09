@@ -34,7 +34,13 @@
           "cameraPermission": "LogaLuxe uses the camera so you can take pictures of your work, your products and your documents."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LogaLuxe uses your location only when you ask to find beauty professionals near you."
+        }
+      ]
     ],
     "scheme": "logaluxe"
   }

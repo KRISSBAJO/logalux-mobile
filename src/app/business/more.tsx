@@ -122,7 +122,7 @@ export default function More() {
       {managerOnly ? (
         <Card style={{ padding: 18, gap: 6, marginTop: 16 }}>
           <T weight="semi" size={16}>Ask a manager or the owner</T>
-          <T muted size={14}>Hours, policies, money and the rest of the business's settings are theirs to change. You can see the menu and look after your own account here.</T>
+          <T muted size={14}>Hours, policies, money and the rest of the business’s settings are theirs to change. You can see the menu and look after your own account here.</T>
         </Card>
       ) : null}
 

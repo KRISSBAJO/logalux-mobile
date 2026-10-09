@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // Pieces the "Profile & portfolio" screens share: a few icons, the star row, a picture tile,
 // the note that stays pinned while a long screen scrolls, and the sheet that picks a photo.
 import { useEffect, useState, type ReactNode } from "react";
@@ -133,7 +134,7 @@ export function BigChoice({ icon, title, sub, onPress, busy, disabled, danger }:
 export function PhotoSource({ open, onClose, title, sub, many = 1, onPicked }: { open: boolean; onClose: () => void; title: string; sub?: string; many?: number; onPicked: (photos: Picked[]) => void }) {
   const [busy, setBusy] = useState<"" | "library" | "camera">("");
   const [error, setError] = useState("");
-  useEffect(() => { if (open) { setError(""); setBusy(""); } }, [open]);
+  useFormReset([open], () => { if (open) { setError(""); setBusy(""); } });
   const go = async (from: "library" | "camera") => {
     setBusy(from); setError("");
     const out = await pickPhotos(from, from === "library" ? many : 1);

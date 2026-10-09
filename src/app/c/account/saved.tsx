@@ -2,16 +2,17 @@
 // its page on the website, because the shop is not part of the app.
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { FlatList, Image, Linking, Pressable, RefreshControl, Text, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Acts, ActBtn, BackTitle, Seg } from "@/components/cc-ui";
 import { Avatar, Btn, Card, Empty, Failed, Loading, Note, Row, Stars } from "@/components/ui";
-import { api, media, WEB_URL, type Row as Data } from "@/lib/api";
+import { api, media, type Row as Data } from "@/lib/api";
 import { CountryBanner } from "@/components/ca-country-banner";
 import { shopHref, usePlace } from "@/lib/ca-place";
 import { useRefocus } from "@/lib/cc-data";
 import { money } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
+import { useShopHandoff } from "@/lib/shop-handoff";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 
@@ -20,6 +21,7 @@ type Tab = "businesses" | "products";
 export default function Saved() {
   const p = useLocalSearchParams<{ tab?: string }>();
   const s = useSession();
+  const shop = useShopHandoff();
   const w = usePlace();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>(p.tab === "products" ? "products" : "businesses");
@@ -113,7 +115,7 @@ export default function Saved() {
         ListEmptyComponent={s.clientToken && q.data && list ? (
           tab === "businesses"
             ? <Empty title="No businesses saved yet" action={<Btn small onPress={() => router.push("/client/search" as never)}>Find a professional</Btn>}>Use Save on a business page to keep it here.</Empty>
-            : <Empty title="No products saved yet" action={<Btn small kind="out" onPress={() => void Linking.openURL(`${WEB_URL}${shopHref(w.scope)}`)}>Visit the shop on the website</Btn>}>Use the heart on a product in the shop to keep it here.</Empty>
+            : <Empty title="No products saved yet" action={<Btn small kind="out" onPress={() => void shop.open(shopHref(w.scope))}>Visit the shop on the website</Btn>}>Use the heart on a product in the shop to keep it here.</Empty>
         ) : null}
       />
     </View>
@@ -123,7 +125,8 @@ export default function Saved() {
 function Product({ x, busy, onRemove }: { x: Data; busy: boolean; onRemove: () => void }) {
   const sizes = ((x.sizes ?? []) as Data[]).map((z) => Number(z.price_cents)).filter((n) => Number.isFinite(n) && n > 0);
   const lowest = Math.min(Number(x.price_cents), ...sizes);
-  const view = () => void Linking.openURL(`${WEB_URL}/shop/${encodeURIComponent(x.slug)}?country=${String(x.currency ?? "").toUpperCase() === "NGN" ? "ng" : "us"}`);
+  const shop = useShopHandoff();
+  const view = () => void shop.open(`/shop/${encodeURIComponent(x.slug)}${x.currency === "NGN" ? "?country=ng" : x.currency === "USD" ? "?country=us" : ""}`);
   const uri = media(x.photo_id);
   return (
     <Card style={{ padding: 14 }}>
@@ -142,8 +145,9 @@ function Product({ x, busy, onRemove }: { x: Data; busy: boolean; onRemove: () =
           </View>
         </Row>
       </Pressable>
+      {shop.error ? <Note kind="bad">{shop.error}</Note> : null}
       <Acts>
-        <ActBtn kind="ink" onPress={view}>View on the website</ActBtn>
+        <ActBtn kind="ink" busy={shop.busy} onPress={view}>View on the website</ActBtn>
         <ActBtn busy={busy} onPress={onRemove}>Remove</ActBtn>
       </Acts>
     </Card>

@@ -180,7 +180,7 @@ export default function Calendar() {
     const count: Record<string, number> = {};
     for (const x of placed) if (x.kind === "booking" && x.row.status !== "no_show") count[x.day] = (count[x.day] ?? 0) + 1;
     return { staffAll, locHours, person, bookings, blocks, days, hoursFor, isOff, working, breaksOf, team, openMin, placed, startH, endH, count, waitlist: Number(d.stats?.waitlist ?? 0) };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [d, who, monday, tz]);
 
   // ----- moving about -----

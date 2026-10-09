@@ -9,7 +9,7 @@ import { CsvButton, type Flash } from "@/components/mh-kit";
 import { Btn, Card, Empty, Failed, Icon, Note, Row, T } from "@/components/ui";
 import { qs, type Row as Data } from "@/lib/api";
 import { clock, dayShort, money, plural, ymd } from "@/lib/format";
-import { DENIED, cap, dateOnly, openWeb, orDenied, signedIn } from "@/lib/mc-util";
+import { DENIED, cap, dateOnly, orDenied, signedIn } from "@/lib/mc-util";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";

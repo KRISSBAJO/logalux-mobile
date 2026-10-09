@@ -1,3 +1,4 @@
+import { useClock } from "@/lib/use-clock";
 // One client's profile (design: M7-Client): who they are, the numbers, what the business has noted,
 // what they hold (packages, memberships, points), their visits and their conversations.
 import { router, useLocalSearchParams } from "expo-router";
@@ -8,7 +9,7 @@ import { Btn, Card, Empty, Failed, IconButton, Loading, Note, Row as Line, Serif
 import { ClientSheet, type ClientFormMode } from "@/components/mb-client-form";
 import { ChannelBadge, Choice, Face, RoundBtn, Sheet, Tabs, Tag } from "@/components/mb-ui";
 import type { Row } from "@/lib/api";
-import { clock, money, plural } from "@/lib/format";
+import { clock, money } from "@/lib/format";
 import { useFlash, useMapi, useRefocus } from "@/lib/mb-hooks";
 import { cap, channelLabel, dateMed, monthYear, sand, stampShort, STATUS_LABEL, tagText, tagTone, toneOf, type Tone } from "@/lib/mb-util";
 import { useLoad } from "@/lib/use-load";
@@ -28,6 +29,7 @@ const dateOnly = (v: string) => { const day = String(v).slice(0, 10) + "T12:00:0
 const PLAN: Record<string, [string, Tone]> = { active: ["Active", "ok"], past_due: ["Payment owing", "gold"], cancelled: ["Cancelled", "wine"], used: ["Used up", "grey"], expired: ["Expired", "grey"] };
 
 export default function ClientProfile() {
+  const clockNow = useClock();
   const p = useLocalSearchParams<{ id: string; added?: string }>();
   const id = String(p.id ?? "");
   const s = useSession();
@@ -74,7 +76,7 @@ export default function ClientProfile() {
   const tags = (cl.tags ?? []) as string[];
   const plans = (held.data?.plans ?? []) as Row[], loyalty = (held.data?.loyalty ?? null) as Row | null, points = Number(held.data?.points ?? 0);
   const consent = Object.entries((cl.consent ?? {}) as Record<string, unknown>).filter(([, v]) => v !== null && v !== "");
-  const isAhead = (v: Row) => Date.parse(v.starts_at) > Date.now() && (v.status === "requested" || v.status === "confirmed");
+  const isAhead = (v: Row) => Date.parse(v.starts_at) > clockNow && (v.status === "requested" || v.status === "confirmed");
   const ahead = visits.filter(isAhead).sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
   const past = visits.filter((v) => !isAhead(v));
   const off = (pl: Row) => [pl.service_discount_pct > 0 ? `${pl.service_discount_pct}% off services` : "", pl.retail_discount_pct > 0 ? `${pl.retail_discount_pct}% off retail` : ""].filter(Boolean).join(", ");
@@ -200,7 +202,7 @@ export default function ClientProfile() {
                 {group("Packages and memberships")}
                 <Card style={{ paddingVertical: 4, paddingHorizontal: 16 }}>
                   {plans.map((pl, i) => {
-                    const live = pl.status === "active" || pl.status === "past_due", expired = !!pl.expires_at && Date.parse(pl.expires_at) < Date.now();
+                    const live = pl.status === "active" || pl.status === "past_due", expired = !!pl.expires_at && Date.parse(pl.expires_at) < clockNow;
                     const [label, tone] = pl.status === "active" && pl.kind === "membership" ? (["Member", "ok"] as [string, Tone]) : PLAN[pl.status] ?? [cap(String(pl.status)), "grey"];
                     return (
                       <View key={pl.id} style={{ paddingVertical: 12, borderBottomWidth: i === plans.length - 1 ? 0 : 1, borderBottomColor: c.line, gap: 2 }}>

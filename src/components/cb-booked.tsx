@@ -1,3 +1,4 @@
+import { useClock } from "@/lib/use-clock";
 // The end of booking: what was booked, with whom, when and where, and what can be done next.
 // The designs show this as the dark "You're booked" card at the top of C6; the rest follows C5's summary card.
 import { router } from "expo-router";
@@ -9,7 +10,7 @@ import { WalletLine, walletsFor } from "@/components/mp-pay";
 import { Btn, Card, Failed, Loading, Note, Row, T } from "@/components/ui";
 import { api, API_URL, ApiError } from "@/lib/api";
 import { addDays, nice, bookHref, span, dayLabel, inZone, providerOf, sentence, WEEKDAYS, weekdayOf, whenLabel, type Biz, type Booking } from "@/lib/cb-lib";
-import { duration, firstName, money } from "@/lib/format";
+import { firstName, money } from "@/lib/format";
 import { bookingPhone, phoneWord, useFeatures } from "@/lib/mp-features";
 import { useSession } from "@/lib/session";
 import { useLoad } from "@/lib/use-load";
@@ -18,12 +19,13 @@ import { c, f } from "@/lib/theme";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: string; src: string }) {
+  const clockNow = useClock();
   const s = useSession();
   const ft = useFeatures();
   // The public copy of the booking is all a guest can read. A signed-in client's own copy proves it is theirs.
   const q = useLoad(async () => {
     if (!UUID.test(id)) throw new ApiError(404, "We could not find that booking.");
-    const bk = (await api<{ booking: Booking }>(`/bookings/${id}`)).booking;
+    const bk = (await api<{ booking: Booking }>(`/bookings/${id}`, { token: s.clientToken })).booking;
     if (bk.business_slug !== biz.slug) throw new ApiError(404, "We could not find that booking.");
     let mine = false;
     if (s.clientToken) {
@@ -134,7 +136,7 @@ export function CbBooked({ biz, id, ids, src }: { biz: Biz; id: string; ids: str
         ) : null}
       </Card>
 
-      {!cancelled && !unpaid && hours > 0 && freeUntil.getTime() > Date.now() ? <T muted size={13} style={{ marginTop: 12 }}>Free to cancel until {whenLabel(freeUntil, tz)}.</T> : null}
+      {!cancelled && !unpaid && hours > 0 && freeUntil.getTime() > clockNow ? <T muted size={13} style={{ marginTop: 12 }}>Free to cancel until {whenLabel(freeUntil, tz)}.</T> : null}
       {unpaid ? <View style={{ marginTop: 12 }}><Strip kind="gold" icon={<Icon name="info" size={18} color={c.goldInk} />}>If you have just paid, pull down to check again. A payment can take a moment to arrive.</Strip></View> : null}
 
       {cancelled || unpaid ? null : q.data?.mine ? (
@@ -182,7 +184,7 @@ export function CbRepeat({ id, startsAt, tz, currency, business }: { id: string;
       setDone({ made: Array.isArray(j.made) ? j.made : [], skipped: Array.isArray(j.skipped) ? j.skipped : [] });
     } catch (e) {
       const err = e as ApiError;
-      setError(err.status === 401 ? "You are signed out. Sign in and try again." : err.status === 0 ? "We could not reach LogaLuxe. Nothing was booked. Try again in a moment." : err.message);
+      setError(err.status === 401 ? "You are signed out. Sign in and try again." : err.status === 0 ? "We could not confirm the result. Your booking may have been received. Check your bookings before trying again." : err.message);
     }
     setBusy(false);
   }

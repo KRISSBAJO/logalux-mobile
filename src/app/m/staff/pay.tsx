@@ -7,10 +7,9 @@ import { AskManager, Grp, Header, Sheet, SmallBtn, Wait, mc } from "@/components
 import { DateField, Fig } from "@/components/me-kit";
 import { Btn, Card, Chip, Empty, Failed, Icon, Note, Row, Screen, T } from "@/components/ui";
 import type { Row as Data } from "@/lib/api";
-import { money, plural } from "@/lib/format";
+import { money, plural , ymd } from "@/lib/format";
 import { DENIED, dateOnly, orDenied, signedIn } from "@/lib/mc-util";
 import { PAY, atLeast, dur, exportPayroll, periods, rentDays } from "@/lib/me-staff";
-import { ymd } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { c, f, pad } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";

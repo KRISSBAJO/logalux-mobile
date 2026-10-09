@@ -113,7 +113,7 @@ export const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0
 // (which leaves this screen and comes back) does not lose it. Answers belong to one business.
 export type Details = { first: string; last: string; phone: string; email: string; note: string; who: "me" | "other"; guest: string; answers: Record<string, string> };
 const drafts: Record<string, Details> = {};
-export const draftOf = (slug: string): Details | undefined => drafts[slug];
-export const keepDraft = (slug: string, d: Details | null) => { if (d) drafts[slug] = d; else delete drafts[slug]; };
+export const draftOf = (slug: string, owner?: string | null): Details | undefined => drafts[`${owner ?? "guest"}:${slug}`];
+export const keepDraft = (slug: string, d: Details | null, owner?: string | null) => { const key = `${owner ?? "guest"}:${slug}`; if (d) drafts[key] = d; else delete drafts[key]; };
 
 export type { Row };

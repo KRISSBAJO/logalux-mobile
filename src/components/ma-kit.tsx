@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // Pieces shared by the business day-to-day screens: a sheet that rises from the bottom, the week strip,
 // the free-time picker (the same business-side availability the web's booking forms use), and a few icons
 // the shared kit does not have.
@@ -140,14 +141,13 @@ export function SlotPicker({ mapi, tz, currency, staff, serviceIds, exclude, day
   const key = serviceIds.join(",");
   const people = staff.filter((p) => p.bookable !== false);
 
-  useEffect(() => { setMonday(mondayOf(day)); }, [day]);
+  useFormReset([day], () => { setMonday(mondayOf(day)); });
 
+  useFormReset([key, day, who, exclude, again], () => { setAll(false); setSlots(null); setError(""); });
   useEffect(() => {
     onPick(null);
-    setAll(false);
-    if (!key || !day) { setSlots(null); setError(""); return; }
+    if (!key || !day) return;
     let open = true;
-    setSlots(null); setError("");
     mapi<{ slots?: Slot[]; duration_min?: number }>("/availability" + qs({ date: day, services: key, staff: who || "any", exclude }))
       .then((out) => { if (open) { setSlots(out.slots ?? []); setMinutes(out.duration_min ?? 0); } })
       .catch((e: Error) => { if (open) setError(e.message || "Could not load the free times."); });

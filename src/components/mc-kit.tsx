@@ -223,7 +223,7 @@ export function AskManager({ what, who = "a manager or the owner" }: { what: str
     <View style={{ gap: 12, marginTop: 16 }}>
       <Card style={{ padding: 18, gap: 6 }}>
         <T weight="semi" size={16}>Ask {who}</T>
-        <T muted size={14}>{what} Your sign-in is for the day's work: the calendar, clients, checkout and messages.</T>
+        <T muted size={14}>{what} Your sign-in is for the day’s work: the calendar, clients, checkout and messages.</T>
       </Card>
       <Card>
         <Item title="Your account" sub="Your name, phone and password" onPress={() => router.push("/m/account" as never)} />

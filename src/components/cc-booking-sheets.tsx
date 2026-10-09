@@ -1,3 +1,4 @@
+import { useFormReset } from "../lib/form-reset";
 // The jobs that can be done to one booking, each in its own sheet: move it, cancel it, cancel the rest
 // of a series, repeat it, tip, and report a problem. Every rule and sentence follows the web account.
 import { useEffect, useMemo, useState } from "react";
@@ -37,13 +38,13 @@ export function MoveSheet({ open, onClose, b, more, onMoved }: Common & { more: 
   const staff = who === "same" ? String(more.staff_id) : "any";
 
   // Open on the week of the booked day.
-  useEffect(() => {
+  useFormReset([open, b.id], () => {
     if (!open) return;
     const start = booked >= first ? booked : first;
     setDate(start); setWho("same"); setPick(null); setFailed("");
     setPage(Math.max(0, Math.floor((Date.parse(start) - Date.parse(first)) / (7 * 864e5))));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, b.id]);
+     
+  });
 
   const week = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(first, page * 7 + i)), [first, page]);
 
@@ -61,11 +62,11 @@ export function MoveSheet({ open, onClose, b, more, onMoved }: Common & { more: 
     return () => { live = false; };
   }, [open, week, staff, services, b.slug]);
 
+  useFormReset([open, date, staff, services, b.slug, b.starts_at], () => { setSlots(null); setPick(null); setError(""); setNote(""); });
   // The free times of the chosen day.
   useEffect(() => {
     if (!open || !services) return;
     let live = true;
-    setSlots(null); setPick(null); setError(""); setNote("");
     api<{ slots: Slot[]; note?: string }>(`/businesses/${b.slug}/availability${qs({ date, services, staff })}`)
       .then((out) => {
         if (!live) return;
@@ -181,7 +182,7 @@ function Round({ icon, label, onPress, off }: { icon: "back" | "next"; label: st
 export function CancelSheet({ open, onClose, b, more, onCancelled }: Common & { more?: Data | null; onCancelled: (message: string) => void }) {
   const s = useSession();
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  useEffect(() => { if (open) setError(""); }, [open]);
+  useFormReset([open], () => { if (open) setError(""); });
   const cancel = async () => {
     setBusy(true); setError("");
     try {
@@ -216,7 +217,7 @@ export function SeriesSheet({ open, onClose, b, series, onDone }: Common & { /**
   const s = useSession();
   const [busy, setBusy] = useState(false);
   const [lines, setLines] = useState<Line[] | null>(null);
-  useEffect(() => { if (open) setLines(null); }, [open]);
+  useFormReset([open], () => { if (open) setLines(null); });
   const tz = b.timezone as string;
 
   const run = async () => {
@@ -284,7 +285,7 @@ export function RepeatSheet({ open, onClose, b, onDone }: Common & { onDone: () 
   const [every, setEvery] = useState(2), [times, setTimes] = useState(3);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [done, setDone] = useState<Repeated | null>(null);
-  useEffect(() => { if (open) { setDone(null); setError(""); } }, [open]);
+  useFormReset([open], () => { if (open) { setDone(null); setError(""); } });
 
   const firstDay = ymd(new Date(b.starts_at), tz);
   const dates = Array.from({ length: times }, (_, i) => addDays(firstDay, 7 * every * (i + 1)));
@@ -379,7 +380,7 @@ export function TipSheet({ open, onClose, b, onTipped }: Common & { onTipped: (m
   const [pick, setPick] = useState<number | "own">("own");
   const [own, setOwn] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  useEffect(() => { if (open) { setPick(choices[1]?.cents ?? choices[0]?.cents ?? "own"); setOwn(""); setError(""); } }, [open, choices]);
+  useFormReset([open, JSON.stringify(choices)], () => { if (open) { setPick(choices[1]?.cents ?? choices[0]?.cents ?? "own"); setOwn(""); setError(""); } });
   const cents = pick === "own" ? Math.round((Number(own.replace(/,/g, "")) || 0) * 100) : pick;
 
   const send = async () => {
@@ -435,7 +436,7 @@ export function ProblemSheet({ open, onClose, b, onReported }: Common & { onRepo
   const s = useSession();
   const [reason, setReason] = useState(""), [text, setText] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  useEffect(() => { if (open) { setReason(""); setText(""); setError(""); } }, [open]);
+  useFormReset([open], () => { if (open) { setReason(""); setText(""); setError(""); } });
 
   const send = async () => {
     const statement = text.trim();

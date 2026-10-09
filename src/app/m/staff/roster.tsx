@@ -11,7 +11,7 @@ import type { Row as Data } from "@/lib/api";
 import { plural } from "@/lib/format";
 import { DAY_LONG, clock12 } from "@/lib/mc-util";
 import { addDays, dayFull, mondayOf, weekTitle } from "@/lib/mb-util";
-import { DAYS, breaksOf, dayKey, dur, isRenter, offOn, pattern, rentDays, rostered, shiftOf, span12, useTeam, weekDays, worksOn, type Team } from "@/lib/me-staff";
+import { breaksOf, dayKey, dur, isRenter, offOn, pattern, rentDays, rostered, shiftOf, span12, useTeam, weekDays, worksOn, type Team } from "@/lib/me-staff";
 import { c, f } from "@/lib/theme";
 
 type Cell = { kind: "work" | "leave" | "asked" | "off" | "rent" | "free"; title: string; sub: string; mark: string };

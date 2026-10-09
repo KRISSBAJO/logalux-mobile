@@ -1,3 +1,4 @@
+import { useFormReset } from "@/lib/form-reset";
 // The till (design: M6-Checkout). `/m/checkout/<booking id>` takes payment for a visit;
 // `/m/checkout/new` is a quick sale with no booking. The rules are the web till's and the API's
 // (logaluxe-be/internal/httpapi/m_checkout.go): booked services keep the price agreed at booking,
@@ -14,6 +15,7 @@ import { qs, type Row as Data } from "@/lib/api";
 import { clock, dayShort, duration, firstName, money, ymd } from "@/lib/format";
 import { allowed, waitForSignIn, dueOf, paper, shortName, toCents, todayIn, whoOf } from "@/lib/ma-format";
 import { lineTotal, pointsProblem, ticketTotals, type Line, type MemberRates, type Points } from "@/lib/ma-ticket";
+import { checkoutRequest, completeCheckout, pendingCheckouts, type CheckoutRequest } from "@/lib/checkout-request";
 import { useSession } from "@/lib/session";
 import { c, f } from "@/lib/theme";
 import { useLoad } from "@/lib/use-load";
@@ -98,13 +100,29 @@ export default function Checkout() {
 
   const clientId: string | null = booking ? booking.client_id ?? null : chosen?.id ?? null;
   const sellerId: string = booking ? String(booking.staff_id ?? "") : staffId;
+  const paying = useRef(false);
+  const [pendingSales, setPendingSales] = useState<CheckoutRequest[]>([]);
+  const customerScope = quick ? clientId ?? "walk-in" : `booking:${id}`;
+  const businessScope = String(m?.business_id ?? ""), merchantScope = String(m?.id ?? "");
+  useFormReset([businessScope, merchantScope, customerScope], () => setPendingSales([]));
+  useEffect(() => {
+    let open = true;
+    if (!businessScope || !merchantScope) return;
+    pendingCheckouts(businessScope, merchantScope, customerScope)
+      .then((value) => { if (open) setPendingSales(value); })
+      .catch(() => { if (open) setProblem("Device storage is unavailable. Checkout cannot safely submit."); });
+    return () => { open = false; };
+  }, [businessScope, merchantScope, customerScope]);
+
   const staff = ((till?.staff ?? []) as Data[]);
   const sellerName = booking ? String(booking.staff ?? "") : String(staff.find((x) => x.id === staffId)?.name ?? "");
+
+  useFormReset([lookup], () => { setFound(null); setLookupError(""); });
 
   // A quick sale can be put on a client's record: find them by name, phone or email.
   useEffect(() => {
     const q = lookup.trim();
-    if (q.length < 2) { setFound(null); setLookupError(""); return; }
+    if (q.length < 2) return;
     let open = true;
     const timer = setTimeout(() => {
       s.mapi<{ clients?: Data[] }>("/clients" + qs({ q, sort: "name" }))
@@ -118,7 +136,7 @@ export default function Checkout() {
   // What the client holds: packages with visits left, a membership with its discounts, and loyalty points.
   const [plans, setPlans] = useState<{ forClient: string; plans: Plan[]; points: number; error: string } | null>(null);
   useEffect(() => {
-    if (!clientId) { setPlans(null); return; }
+    if (!clientId) return;
     let open = true;
     s.mapi<{ plans?: Plan[]; points?: number }>(`/clients/${encodeURIComponent(clientId)}/plans`)
       .then((out) => { if (open) setPlans({ forClient: clientId, plans: out.plans ?? [], points: Number(out.points ?? 0), error: "" }); })
@@ -252,16 +270,25 @@ export default function Checkout() {
   const promoOff = Number(q?.out?.promo_discount_cents ?? 0);
   const due = q?.out ? Number(q.out.total_cents ?? t.due) : t.due;
 
-  const pay = async () => {
+  const pay = async (saved?: CheckoutRequest) => {
+    if (paying.current) return;
     setProblem("");
-    if (!lines.length) { setProblem("Add at least one service or product."); return; }
+    if (!saved && !lines.length) { setProblem("Add at least one service or product."); return; }
+    paying.current = true;
     setBusy(true);
     try {
-      const out = await s.mapi("/checkout", { method: "POST", body: ticket() });
-      setReceipt({ out, method, who });
+      const body = ticket();
+      const request = saved ?? await checkoutRequest(body, businessScope, merchantScope, customerScope);
+      setPendingSales((current) => current.some((x) => x.id === request.id) ? current : [...current, request]);
+      const out = await s.mapi("/checkout", { method: "POST", body: saved ? { request_id: request.id, replay_only: true } : { ...body, request_id: request.id } });
+      if (!out.sale_id) throw new Error("The receipt response was interrupted. Retry the same ticket.");
+      await completeCheckout(request);
+      setPendingSales((current) => current.filter((x) => x.id !== request.id));
+      setReceipt({ out, method: String(out.method ?? method), who: String(out.client_name ?? who) });
     } catch (e) {
       setProblem((e as Error).message);
     } finally {
+      paying.current = false;
       setBusy(false);
     }
   };
@@ -290,10 +317,10 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkRef, linkStatus]);
   // Paid: the API has recorded the sale. Show its receipt.
-  useEffect(() => {
+  useFormReset([link?.status, link?.saleId], () => {
     if (link && link.status === "paid" && link.saleId) setReceipt({ out: { ...link.totals, sale_id: link.saleId }, method: "link", who });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [link?.status, link?.saleId]);
+     
+  });
 
   // ---------- the screen ----------
   const head = (right?: ReactNode) => (
@@ -399,7 +426,12 @@ export default function Checkout() {
   const footer = link ? undefined : (
     <View>
       {problem ? <View style={{ marginBottom: 10 }}><Note kind="bad">{problem}</Note></View> : null}
-      <Btn busy={busy} disabled={blocked || (method === "link" && due <= 0)} onPress={method === "link" ? sendLink : pay} style={{ minHeight: 52 }}>{cta}</Btn>
+      {pendingSales.length > 0 ? <Card>
+        <T>A previous checkout response was not confirmed. Recover its receipt, or rebuild the same ticket to retry safely.</T>
+        {pendingSales.map((request, i) => <Btn key={request.id} disabled={busy} onPress={() => pay(request)}>Recover receipt{pendingSales.length > 1 ? ` ${i + 1}` : ""}</Btn>)}
+      </Card> : null}
+
+      <Btn busy={busy} disabled={blocked || (method === "link" && due <= 0)} onPress={method === "link" ? sendLink : () => pay()} style={{ minHeight: 52 }}>{cta}</Btn>
       <T muted size={11} center style={{ marginTop: 8 }}>
         {!live ? "Payments are simulated on this install. The sale is recorded, but no card is charged and no money moves."
           : method === "link" ? `The client pays on ${provider}'s secure page. LogaLuxe never sees their card.`

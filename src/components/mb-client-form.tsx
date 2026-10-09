@@ -1,6 +1,7 @@
+import { useFormReset } from "../lib/form-reset";
 // The sheet that adds a client or changes one. The API replaces the whole client on a save,
 // so whatever part is being edited, everything else the client already has is sent back unchanged.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Btn, Field, Note } from "./ui";
 import { Sheet } from "./mb-ui";
 import type { Row } from "@/lib/api";
@@ -23,13 +24,13 @@ export function ClientSheet({ open, mode, client, onClose, onSaved }: { open: bo
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
 
   // Start from what the client has each time the sheet opens.
-  useEffect(() => {
+  useFormReset([open, mode, client?.id], () => {
     if (!open) return;
     setName(String(client?.name ?? "")); setPhone(String(client?.phone ?? "")); setEmail(String(client?.email ?? ""));
     setTags(((client?.tags ?? []) as string[]).join(", ")); setNotes(String(client?.notes ?? ""));
     setError(""); setBusy(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, mode, client?.id]);
+     
+  });
 
   const save = async () => {
     setError("");

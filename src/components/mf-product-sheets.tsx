@@ -1,7 +1,8 @@
+import { useFormReset } from "../lib/form-reset";
 // The small jobs done on one product, each in a sheet from the bottom: adjust stock, move it between
 // locations, reorder it, its ingredients and directions, and how much of it each service uses.
 // Every one calls the same API route the web's Inventory tool calls, with the same fields.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { Choice, Sheet } from "@/components/mc-kit";
 import { Fine, NumBox } from "@/components/mf-kit";
@@ -34,7 +35,7 @@ export function AdjustSheet({ open, onClose, p, onDone, locations, startAt }: Co
   const [mode, setMode] = useState<Mode>("restock");
   const [at, setAt] = useState(""), [qty, setQty] = useState(""), [note, setNote] = useState("");
   const [error, setError] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => { if (open) { setMode("restock"); setAt(startAt || String(main?.id ?? "")); setQty(""); setNote(""); setError(""); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
+  useFormReset([open], () => { if (open) { setMode("restock"); setAt(startAt || String(main?.id ?? "")); setQty(""); setNote(""); setError(""); }   });
 
   const m = MODES[mode];
   const here = multi ? shelf(p, at) : Number(p.stock);
@@ -88,12 +89,12 @@ export function MoveSheet({ open, onClose, p, onDone, locations, startAt }: Comm
   const main = locations.find((l) => l.is_primary) ?? locations[0];
   const [from, setFrom] = useState(""), [to, setTo] = useState(""), [qty, setQty] = useState(""), [note, setNote] = useState("");
   const [error, setError] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => {
+  useFormReset([open], () => {
     if (!open) return;
     const first = (startAt && shelf(p, startAt) > 0 ? locations.find((l) => l.id === startAt) : undefined) ?? locations.find((l) => shelf(p, String(l.id)) > 0) ?? main;
     setFrom(String(first?.id ?? "")); setTo(String((locations.find((l) => l.id !== first?.id) ?? main)?.id ?? "")); setQty(""); setNote(""); setError("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+     
+  });
 
   const have = shelf(p, from), n = whole(qty);
   const save = async () => {
@@ -135,7 +136,7 @@ export function ReorderSheet({ open, onClose, p, onDone, cur, tz }: Common & { c
   const s = useSession();
   const [qty, setQty] = useState(""), [days, setDays] = useState(0);
   const [error, setError] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => { if (open) { setQty(String(Math.max(1, Number(p.reorder_at) * 2 - Number(p.stock)))); setDays(0); setError(""); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
+  useFormReset([open], () => { if (open) { setQty(String(Math.max(1, Number(p.reorder_at) * 2 - Number(p.stock)))); setDays(0); setError(""); }   });
 
   const n = whole(qty);
   const save = async () => {
@@ -171,7 +172,7 @@ export function DetailsSheet({ open, onClose, p, onDone, details }: Common & { d
   const s = useSession();
   const [ingredients, setIngredients] = useState(""), [how, setHow] = useState("");
   const [error, setError] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => { if (open) { setIngredients(String(details?.extras?.ingredients ?? "")); setHow(String(details?.product?.how_to_use ?? "")); setError(""); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
+  useFormReset([open], () => { if (open) { setIngredients(String(details?.extras?.ingredients ?? "")); setHow(String(details?.product?.how_to_use ?? "")); setError(""); }   });
 
   const save = async () => {
     setBusy(true); setError("");
@@ -200,10 +201,10 @@ export function UsesSheet({ open, onClose, p, onDone, services }: Common & { ser
   const s = useSession();
   const [use, setUse] = useState<Record<string, string>>({});
   const [error, setError] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => {
+  useFormReset([open], () => {
     if (open) { setUse(Object.fromEntries(((p.used_in ?? []) as Data[]).map((u) => [String(u.service_id), trim(Number(u.qty))]))); setError(""); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+     
+  });
 
   const save = async () => {
     const items: { service_id: string; qty: number }[] = [];

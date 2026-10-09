@@ -99,12 +99,12 @@ export function useModes(mailMode?: string): Modes & { known: boolean } {
   // Asked again when a switch changes, so the wording follows it.
   useEffect(() => {
     let live = true;
-    if (!token) { setGot(null); return; }
+    if (!token) return;
     s.mapi<Row>("/marketing").then((r) => { if (live) setGot(modesOf(r.modes)); }).catch(() => { if (live) setGot(null); });
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, ft.sms_messages, ft.whatsapp]);
-  if (got) return { ...got, known: true };
+  if (got && token) return { ...got, known: true };
   return { email: mailMode === "log" ? "log" : "live", whatsapp: ft.whatsapp ? "live" : "log", sms: ft.sms_messages ? "live" : "log", known: false };
 }
 

@@ -9,8 +9,8 @@ import { SessionProvider } from "@/lib/session";
 import { c } from "@/lib/theme";
 
 export default function RootLayout() {
-  const [loaded] = useFonts({ BodoniModa_500Medium, BodoniModa_500Medium_Italic, BodoniModa_600SemiBold, DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold });
-  if (!loaded) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
+  const [loaded, fontError] = useFonts({ BodoniModa_500Medium, BodoniModa_500Medium_Italic, BodoniModa_600SemiBold, DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold });
+  if (!loaded && !fontError) return <View style={{ flex: 1, backgroundColor: c.cream }} />;
   return (
     <SafeAreaProvider>
       <SessionProvider>

@@ -91,8 +91,8 @@ function Conversation({ id, sent, sentOn }: { id: string; sent: string; sentOn: 
 
   // Opening a conversation marks it read, so the tab's badge is reloaded once it has opened.
   const opened = !!t;
-  useEffect(() => { if (opened) refreshBadge(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [opened]);
-  useEffect(() => { if (sent) { const r = sentResult(sent, sentOn, modes); show(r.message, r.kind); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { if (opened) refreshBadge(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [opened, refreshBadge]);
+  useEffect(() => { if (sent) { const r = sentResult(sent, sentOn, modes); show(r.message, r.kind); }   }, []);
 
   // What this install can really do on this conversation's channel.
   let notice = "";

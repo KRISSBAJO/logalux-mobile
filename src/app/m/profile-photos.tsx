@@ -1,3 +1,4 @@
+import { useFormReset } from "@/lib/form-reset";
 // The portfolio: the photos on the business's public page. Add from the phone's library or camera,
 // describe, reorder, choose the cover, delete. The first photo is the cover.
 // The same calls as the Photos tab of the web's Storefront tool (/v1/m/storefront/photos).
@@ -34,9 +35,9 @@ export default function ProfilePhotos() {
   const [busy, setBusy] = useState("");
 
   // What the "add" sheet shows. It keeps the last choice while it slides away, so its words do not change on the way out.
-  const held = useRef<Picked[]>([]);
-  if (queue.length) held.current = queue;
-  const q = queue.length ? queue : held.current;
+  const [held, setHeld] = useState<Picked[]>([]);
+  if (queue.length && held !== queue) setHeld(queue);
+  const q = queue.length ? queue : held;
 
   const seen = useRef(false);
   useFocusEffect(useCallback(() => {
@@ -50,12 +51,13 @@ export default function ProfilePhotos() {
   const count = loaded ? ((data.photos ?? []) as Data[]).length : 0;
 
   // Arriving from "Add a photo" opens the chooser straight away, once.
+  useFormReset([add, loaded, storage, count], () => { if (add && loaded && storage && count < MAX_PHOTOS_HELD) setSource(true); });
   const asked = useRef(false);
   useEffect(() => {
     if (add && loaded && !asked.current) {
       asked.current = true;
       router.setParams({ add: undefined }); // once only: coming back to this screen must not ask again
-      if (storage && count < MAX_PHOTOS_HELD) setSource(true);
+
     }
   }, [add, loaded, storage, count]);
 

@@ -5,6 +5,11 @@
       "distribution": "store",
       "channel": "testing",
       "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://logaluxe-api.onrender.com",
+        "EXPO_PUBLIC_WEB_URL": "https://www.logaluxe.com",
+        "LOGALUXE_ANDROID_PACKAGE": "com.logaluxe.mobile"
+      },
       "autoIncrement": true,
       "android": { "buildType": "app-bundle" }
     },
@@ -12,6 +17,11 @@
       "distribution": "store",
       "channel": "production",
       "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://logaluxe-api.onrender.com",
+        "EXPO_PUBLIC_WEB_URL": "https://www.logaluxe.com",
+        "LOGALUXE_ANDROID_PACKAGE": "com.logaluxe.mobile"
+      },
       "autoIncrement": true
     }
   },

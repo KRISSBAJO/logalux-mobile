@@ -28,6 +28,15 @@
       "expo-web-browser",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1513"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "LogaLuxe opens your photos so you can add pictures of your work, your products and your documents.",
